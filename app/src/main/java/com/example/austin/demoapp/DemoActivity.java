@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Button;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentTransaction;
@@ -76,12 +75,6 @@ public class DemoActivity extends AppCompatActivity {
 
     }//settingsDialog
 
-    public void updateBAC(View view)
-    {
-        TextView BAC = (TextView) findViewById(R.id.BAC);
-        BAC.setText("");
-    }
-
     public double BAC_calc(int drinks, String sex, int weight, double time)
     {
         double sexRatio = sex.equals("MALE") ? 0.73 : 0.66;
@@ -112,10 +105,18 @@ public class DemoActivity extends AppCompatActivity {
                 settingsDialog sD_fragment = new settingsDialog();
                 sD_fragment.show(ft, "txn_tag");
                 return true;
+            case R.id.update:
+                if (drinksConsumed != 0) {
+                    TextView BAC = (TextView) findViewById(R.id.BAC);
+                    BAC.setText("BAC: "+"");
+                }
+                return true;
             case R.id.reset:
                 drinksConsumed = 0;
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 drinkCount.setText("Drink Count: 0");
+                TextView BAC = (TextView) findViewById(R.id.BAC);
+                BAC.setText("");
                 return true;
         }//switch
 
