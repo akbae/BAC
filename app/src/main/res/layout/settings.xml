@@ -3,11 +3,71 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/settings"
-        android:layout_centerInParent="true"
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Full Screen Dialog Fragment" />
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:id="@+id/sex_options">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sex: "
+            android:id="@+id/sex_text"
+            android:textSize="28sp" />
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="24dp"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/male"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Male"
+                android:onClick="isMale" />
+
+            <RadioButton
+                android:id="@+id/female"
+                android:layout_marginLeft="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Female"
+                android:onClick="isFemale" />
+        </RadioGroup>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sex_options"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:id="@+id/weight_options">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Weight: "
+            android:id="@+id/weight_text"
+            android:textSize="28sp"
+            android:layout_below="@+id/linearLayout"
+            android:layout_alignLeft="@+id/linearLayout"
+            android:layout_alignStart="@+id/linearLayout" />
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:id="@+id/weight"
+            />
+    </LinearLayout>
 
 </RelativeLayout>
