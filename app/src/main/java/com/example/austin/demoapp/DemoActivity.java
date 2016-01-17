@@ -23,6 +23,8 @@ public class DemoActivity extends AppCompatActivity {
     public int drinksConsumed = 0;
     public boolean userSex;
     public int userWeight;
+
+    // For time calculations
     public Calendar calendar = Calendar.getInstance();
     public Date initialDate;
     public Date prevDate;
@@ -31,33 +33,38 @@ public class DemoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
+        // Toolbar setup
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        // Drink increase button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-
         drinkCount.setText("Drink Count: 0");
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Snackbar display for action
                 Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show(); // listens for drink
+                        .setAction("Action", null).show();
                 drinksConsumed++;
 
-                calendar = Calendar.getInstance(); // Update
+                prevDate = calendar.getTime();
+                calendar = Calendar.getInstance(); // Update to now
 
+                // Initialize times
                 if (drinksConsumed == 1) {
                     initialDate = calendar.getTime();
-                    prevDate = calendar.getTime();
+                    prevDate = calendar.getTime(); // To account for lag between app start and action
                 }
 
+                // Initialize TextViews for display variables
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 TextView BAC = (TextView) findViewById(R.id.BAC);
                 TextView timeFromStart = (TextView) findViewById(R.id.time_start);
                 TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
+                // Count / BAC
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
 
@@ -67,6 +74,7 @@ public class DemoActivity extends AppCompatActivity {
                     BAC.setText(BAC_text);
                 }
 
+                // Time
                 String time_start = "Time since starting: " + String.valueOf(
                                                         elapsedTime(calendar.getTime())) + " mins";
                 timeFromStart.setText(time_start);
@@ -81,8 +89,8 @@ public class DemoActivity extends AppCompatActivity {
 
     }//onCreate
 
+    // Opens on menu option selection
     public static class settingsDialog extends DialogFragment {
-
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -112,36 +120,32 @@ public class DemoActivity extends AppCompatActivity {
     }//settingsDialog
 
 
+    // Calculates time between initialDate and input Date
     public int elapsedTime(Date date)
     {
         return timeDiff(initialDate,date);
     }//elapsedTime
 
-    // Difference in minutes
+    // Returns difference in minutes
     public int timeDiff(Date date_1, Date date_2)
     {
         long milli_diff = date_2.getTime() - date_1.getTime();
         return (int) milli_diff / 1000 / 60;
     }//timeDiff
 
-    public void submit(View view)
-    {
-
+    // Event handler for submit button on settingsDialog
+    public void submit(View view) {
         EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
-        setWeight(Integer.parseInt(weight_input.getText().toString()));
+        userWeight = Integer.parseInt(weight_input.getText().toString());
+    }//submit
 
-    }//submit button from dialog fragment
-
-    public void setWeight(int wt)
-    {
-        userWeight = wt;
-    }
-
+    // Returns true for male selection and false for female selection
     public void sexSelected(View view)
     {
         userSex = view.getId() == R.id.male;
     }//sexSelected
 
+    // Calculates BAC based on drinks consumed, sex, weight, and time (min) since start
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
@@ -171,13 +175,13 @@ public class DemoActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         switch (id)
         {
-            case R.id.action_settings:
+            case R.id.action_settings: // Settings option - setup of sex,weight
                 FragmentTransaction ft = getFragmentManager().beginTransaction();
                 settingsDialog sD_fragment = new settingsDialog();
                 sD_fragment.show(ft, "txn_tag");
                 return true;
 
-            case R.id.update:
+            case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
                     TextView BAC = (TextView) findViewById(R.id.BAC);
                     String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
@@ -186,7 +190,7 @@ public class DemoActivity extends AppCompatActivity {
                 }
                 return true;
 
-            case R.id.reset:
+            case R.id.reset: // Reset option - resets drink counter to 0
                 drinksConsumed = 0;
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 drinkCount.setText("Drink Count: 0");
@@ -196,6 +200,7 @@ public class DemoActivity extends AppCompatActivity {
         }//switch
 
         return super.onOptionsItemSelected(item);
+
     }//onOptionsItemsSelected
 
 }//DemoActivity
