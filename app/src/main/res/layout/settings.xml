@@ -9,8 +9,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
+        android:layout_marginTop="50dp"
         android:layout_marginLeft="20dp"
-        android:layout_marginTop="20dp"
         android:id="@+id/sex_options">
 
         <TextView
@@ -31,6 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Male"
+                android:textSize="20sp"
                 android:onClick="sexSelected" />
 
             <RadioButton
@@ -39,6 +40,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Female"
+                android:textSize="20sp"
                 android:onClick="sexSelected" />
         </RadioGroup>
 
@@ -49,8 +51,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/sex_options"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="20dp"
+        android:layout_margin="20dp"
         android:id="@+id/weight_options">
 
         <TextView
@@ -67,7 +68,22 @@
             android:layout_height="wrap_content"
             android:inputType="number"
             android:id="@+id/weight"
-            />
+            android:imeOptions="actionDone" />
     </LinearLayout>
+
+    <Button
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="30dp"
+        android:text="Submit"
+        android:textSize="28sp"
+        android:minHeight="65dp"
+        android:minWidth="150dp"
+        android:background="#4c4d5d"
+        android:textColor="#ffffff"
+        android:id="@+id/submit" >
+    </Button>
 
 </RelativeLayout>

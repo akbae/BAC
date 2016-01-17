@@ -16,15 +16,11 @@ import android.app.FragmentTransaction;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 
-import java.util.prefs.NodeChangeListener;
-
 public class DemoActivity extends AppCompatActivity {
 
     public int drinksConsumed = 0;
-    public boolean radio_checked = false;
-    public boolean weight_checked = false;
-    public boolean sex;
-    public int weight;
+    public boolean userSex;
+    public int userWeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +29,6 @@ public class DemoActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        EditText weight_input = (EditText) findViewById(R.id.weight);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
 
@@ -51,7 +46,8 @@ public class DemoActivity extends AppCompatActivity {
 
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
-                String BAC_text = "BAC: " + "";
+                String BAC_text = "BAC: " + "";//String.valueOf(userSex) + String.valueOf(userWeight);//BAC_calc(drinksConsumed, userSex,
+                                                           //         userWeight,60));
                 BAC.setText(BAC_text);
             }//onClick
 
@@ -67,6 +63,7 @@ public class DemoActivity extends AppCompatActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
+
 
         }
 
@@ -89,16 +86,25 @@ public class DemoActivity extends AppCompatActivity {
 
     }//settingsDialog
 
+    public void setWeight(int new_weight)
+    {
+        if (userWeight != new_weight)
+        {
+            userWeight = new_weight;
+        }
+
+    }//setWeight
+
     public void sexSelected(View view)
     {
-        sex = view.getId() == R.id.male;
+        userSex = view.getId() == R.id.male;
     }//sexSelected
 
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
 
-        return (drinks * 5.14 / weight * sexRatio) - 0.015 * time; //BAC Formula
+        return (drinks * 5.14 / weight * sexRatio) - 0.015 /60 * time; //BAC Formula
     }//BAC_calc
 
     @Override
