@@ -17,11 +17,16 @@ import android.app.FragmentTransaction;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 
+import java.util.Calendar;
+import java.util.Date;
+
 public class DemoActivity extends AppCompatActivity {
 
     public int drinksConsumed = 0;
     public boolean userSex;
     public int userWeight;
+    public Calendar calendar = Calendar.getInstance();
+    public Date initialDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,16 +47,31 @@ public class DemoActivity extends AppCompatActivity {
                         .setAction("Action", null).show(); // listens for drink
                 drinksConsumed++;
 
+                if (drinksConsumed == 1) {
+                    initialDate = calendar.getTime();
+                }
+
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 TextView BAC = (TextView) findViewById(R.id.BAC);
+                TextView timeFromStart = (TextView) findViewById(R.id.time_start);
+                TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
+
                 if (BAC_calc(drinksConsumed,userSex,userWeight,60) != -1.0) {
                     String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
                                                                         userSex, userWeight, 60));
                     BAC.setText(BAC_text);
                 }
+
+                String time_start = "Time since starting: " + String.valueOf(timeDiff(initialDate,
+                                                                    calendar.getTime())) + " mins";
+                timeFromStart.setText(time_start);
+
+                String time_last = "Time since last drink: " + String.valueOf(timeDiff(initialDate,
+                                                                    calendar.getTime())) + " mins";
+                timeFromLast.setText(time_last);
 
             }//onClick
 
@@ -86,6 +106,13 @@ public class DemoActivity extends AppCompatActivity {
         }//onCreateView
 
     }//settingsDialog
+
+    // Difference in minutes
+    public int timeDiff(Date date_1, Date date_2)
+    {
+        long milli_diff = date_1.getTime() - date_2.getTime();
+        return (int) milli_diff / 1000 / 60;
+    }//timeDiff
 
     public void submit(View view)
     {
