@@ -47,9 +47,12 @@ public class DemoActivity extends AppCompatActivity {
 
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
-                String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
+                if (BAC_calc(drinksConsumed,userSex,userWeight,60) != -1.0) {
+                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
                                                                         userSex, userWeight, 60));
-                BAC.setText(BAC_text);
+                    BAC.setText(BAC_text);
+                }
+
             }//onClick
 
         });//fab.setOnClickListener
@@ -105,8 +108,13 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
+        if (weight != 0) {
+            return (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time; //BAC Formula
+        }
+        TextView BAC = (TextView) findViewById(R.id.BAC);
+        BAC.setText("Input settings for BAC calculation");
+        return -1.0;
 
-        return (drinks * 5.14 / weight * sexRatio) - 0.015 /60 * time; //BAC Formula
     }//BAC_calc
 
     @Override
@@ -135,7 +143,8 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.update:
                 if (drinksConsumed != 0) {
                     TextView BAC = (TextView) findViewById(R.id.BAC);
-                    String BAC_text = "BAC: " + "";
+                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
+                                                                        userSex, userWeight, 60));
                     BAC.setText(BAC_text);
                 }
                 return true;
