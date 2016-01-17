@@ -83,7 +83,7 @@
         android:minWidth="150dp"
         android:background="#4c4d5d"
         android:textColor="#ffffff"
-        android:id="@+id/submit" >
-    </Button>
+        android:id="@+id/submitButton"
+        android:onClick="submit" />
 
 </RelativeLayout>

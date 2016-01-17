@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.app.Dialog;
@@ -46,25 +47,22 @@ public class DemoActivity extends AppCompatActivity {
 
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
-                String BAC_text = "BAC: " + "";//String.valueOf(userSex) + String.valueOf(userWeight);//BAC_calc(drinksConsumed, userSex,
-                                                           //         userWeight,60));
+                String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
+                                                                        userSex, userWeight, 60));
                 BAC.setText(BAC_text);
             }//onClick
 
         });//fab.setOnClickListener
 
-
-
     }//onCreate
 
     public static class settingsDialog extends DialogFragment {
+
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
-
-
         }
 
         @Override
@@ -78,22 +76,26 @@ public class DemoActivity extends AppCompatActivity {
             }//if
         }//onStart
 
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View root = inflater.inflate(R.layout.settings, container, false);
-            return root;
-        }
+            return inflater.inflate(R.layout.settings, container, false);
+        }//onCreateView
 
     }//settingsDialog
 
-    public void setWeight(int new_weight)
+    public void submit(View view)
     {
-        if (userWeight != new_weight)
-        {
-            userWeight = new_weight;
-        }
 
-    }//setWeight
+        EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
+
+        setWeight(Integer.parseInt(weight_input.getText().toString()));
+    }
+
+    public void setWeight(int wt)
+    {
+        userWeight = wt;
+    }
 
     public void sexSelected(View view)
     {
