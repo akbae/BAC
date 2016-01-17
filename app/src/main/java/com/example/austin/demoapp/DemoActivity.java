@@ -15,19 +15,20 @@ import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
+
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
 public class DemoActivity extends AppCompatActivity {
 
-    public int drinksConsumed = 0;
+    public int drinksConsumed;
     public boolean userSex;
     public int userWeight;
 
     // For time calculations
-    public Calendar calendar = Calendar.getInstance();
-    public Date initialDate;
-    public Date prevDate;
+    public Calendar calendar;
+    public ArrayList<Date> drinkTimes = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,20 +44,12 @@ public class DemoActivity extends AppCompatActivity {
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
+            // Clicking FAB
             public void onClick(View view) {
-                // Snackbar display for action
-                Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                drinksConsumed++;
 
-                prevDate = calendar.getTime();
                 calendar = Calendar.getInstance(); // Update to now
-
-                // Initialize times
-                if (drinksConsumed == 1) {
-                    initialDate = calendar.getTime();
-                    prevDate = calendar.getTime(); // To account for lag between app start and action
-                }
+                drinkTimes.add(calendar.getTime());
+                drinksConsumed = drinkTimes.size();
 
                 // Initialize TextViews for display variables
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
@@ -68,20 +61,61 @@ public class DemoActivity extends AppCompatActivity {
                 String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
                 drinkCount.setText(drinkText);
 
-                if (BAC_calc(drinksConsumed,userSex,userWeight,60) != -1.0) {
+                if (userWeight != 0) {
                     String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
                                             userSex, userWeight, elapsedTime(calendar.getTime())));
                     BAC.setText(BAC_text);
-                }
+                }//if userWeight
+                else {  BAC.setText("Input settings for BAC calculation");  }
 
                 // Time
                 String time_start = "Time since starting: " + String.valueOf(
                                                         elapsedTime(calendar.getTime())) + " mins";
                 timeFromStart.setText(time_start);
 
-                String time_last = "Time since last drink: " + String.valueOf(timeDiff(prevDate,
+
+                String time_last = "Time since last drink: " + String.valueOf(prevTime(
                                                                     calendar.getTime())) + " mins";
                 timeFromLast.setText(time_last);
+
+
+                // Snackbar display for action
+                Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
+                        .setAction("UNDO", new View.OnClickListener() {
+                            @Override
+                            // Snackbar undo click
+                            public void onClick(View view) {
+                                drinksConsumed--;
+                                drinkTimes.remove(drinksConsumed);
+
+                                // Re-display
+                                TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+                                TextView BAC = (TextView) findViewById(R.id.BAC);
+                                TextView timeFromStart = (TextView) findViewById(R.id.time_start);
+                                TextView timeFromLast = (TextView) findViewById(R.id.time_last);
+
+                                // Count / BAC
+                                String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
+                                drinkCount.setText(drinkText);
+
+                                if (userWeight != 0) {
+                                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(
+                                            drinksConsumed, userSex, userWeight, elapsedTime(calendar.getTime())));
+                                    BAC.setText(BAC_text);
+                                }//if userWeight
+                                else {  BAC.setText("Input settings for BAC calculation");  }
+
+                                // Time
+                                String time_start = "Time since starting: " + String.valueOf(
+                                                        elapsedTime(calendar.getTime())) + " mins";
+                                timeFromStart.setText(time_start);
+
+
+                                String time_last = "Time since last drink: " + String.valueOf(prevTime(
+                                                                    calendar.getTime())) + " mins";
+                                timeFromLast.setText(time_last);
+                            }//onClick
+                        }).show();
 
             }//onClick
 
@@ -120,11 +154,23 @@ public class DemoActivity extends AppCompatActivity {
     }//settingsDialog
 
 
-    // Calculates time between initialDate and input Date
+    // Calculates time between initial Date and input Date
     public int elapsedTime(Date date)
     {
-        return timeDiff(initialDate,date);
+        return timeDiff(drinkTimes.get(0),date);
     }//elapsedTime
+
+    //Calculates time between previous Date and input Date
+    public int prevTime(Date date)
+    {
+        try {
+            return timeDiff(drinkTimes.get(drinksConsumed-2),date);
+        }//try
+        catch (IndexOutOfBoundsException e) {
+            return elapsedTime(date);
+        }//catch
+
+    }//prevTime
 
     // Returns difference in minutes
     public int timeDiff(Date date_1, Date date_2)
@@ -149,12 +195,7 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
-        if (weight != 0) {
-            return (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time; //BAC Formula
-        }
-        TextView BAC = (TextView) findViewById(R.id.BAC);
-        BAC.setText("Input settings for BAC calculation");
-        return -1.0;
+        return (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time; //BAC Formula
 
     }//BAC_calc
 
@@ -183,11 +224,14 @@ public class DemoActivity extends AppCompatActivity {
 
             case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
-                    TextView BAC = (TextView) findViewById(R.id.BAC);
-                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
+                    if (BAC_calc(drinksConsumed,userSex,userWeight,60) != -1.0) {
+                        TextView BAC = (TextView) findViewById(R.id.BAC);
+
+                        String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
                                             userSex, userWeight, elapsedTime(calendar.getTime())));
-                    BAC.setText(BAC_text);
-                }
+                        BAC.setText(BAC_text);
+                    }//if BAC_calc
+                }//if drinksConsumed
                 return true;
 
             case R.id.reset: // Reset option - resets drink counter to 0
