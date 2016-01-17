@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Male"
-                android:onClick="isMale" />
+                android:onClick="sexSelected" />
 
             <RadioButton
                 android:id="@+id/female"
@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Female"
-                android:onClick="isFemale" />
+                android:onClick="sexSelected" />
         </RadioGroup>
 
     </LinearLayout>

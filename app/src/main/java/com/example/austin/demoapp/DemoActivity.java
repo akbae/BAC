@@ -8,16 +8,23 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentTransaction;
-import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.view.LayoutInflater;
+
+import java.util.prefs.NodeChangeListener;
 
 public class DemoActivity extends AppCompatActivity {
 
     public int drinksConsumed = 0;
+    public boolean radio_checked = false;
+    public boolean weight_checked = false;
+    public boolean sex;
+    public int weight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,8 +33,10 @@ public class DemoActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        EditText weight_input = (EditText) findViewById(R.id.weight);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+
         drinkCount.setText("Drink Count: 0");
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -40,20 +49,25 @@ public class DemoActivity extends AppCompatActivity {
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 TextView BAC = (TextView) findViewById(R.id.BAC);
 
-                drinkCount.setText("Drink Count: " + String.valueOf(drinksConsumed));
-                BAC.setText("BAC: " + "");
+                String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
+                drinkCount.setText(drinkText);
+                String BAC_text = "BAC: " + "";
+                BAC.setText(BAC_text);
             }//onClick
 
         });//fab.setOnClickListener
 
+
+
     }//onCreate
 
-    static public class settingsDialog extends DialogFragment {
+    public static class settingsDialog extends DialogFragment {
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
+
         }
 
         @Override
@@ -75,12 +89,16 @@ public class DemoActivity extends AppCompatActivity {
 
     }//settingsDialog
 
-    public double BAC_calc(int drinks, String sex, int weight, double time)
+    public void sexSelected(View view)
     {
-        double sexRatio = sex.equals("MALE") ? 0.73 : 0.66;
-        double BAC = (drinks * 5.14 / weight * sexRatio) - 0.015 * time;
+        sex = view.getId() == R.id.male;
+    }//sexSelected
 
-        return BAC;
+    public double BAC_calc(int drinks, boolean sex, int weight, double time)
+    {
+        double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
+
+        return (drinks * 5.14 / weight * sexRatio) - 0.015 * time; //BAC Formula
     }//BAC_calc
 
     @Override
@@ -105,12 +123,15 @@ public class DemoActivity extends AppCompatActivity {
                 settingsDialog sD_fragment = new settingsDialog();
                 sD_fragment.show(ft, "txn_tag");
                 return true;
+
             case R.id.update:
                 if (drinksConsumed != 0) {
                     TextView BAC = (TextView) findViewById(R.id.BAC);
-                    BAC.setText("BAC: "+"");
+                    String BAC_text = "BAC: " + "";
+                    BAC.setText(BAC_text);
                 }
                 return true;
+
             case R.id.reset:
                 drinksConsumed = 0;
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
