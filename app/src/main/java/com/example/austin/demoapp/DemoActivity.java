@@ -8,7 +8,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.app.Dialog;
@@ -16,7 +15,6 @@ import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
-
 import java.util.Calendar;
 import java.util.Date;
 
@@ -48,11 +46,12 @@ public class DemoActivity extends AppCompatActivity {
                         .setAction("Action", null).show(); // listens for drink
                 drinksConsumed++;
 
+                calendar = Calendar.getInstance(); // Update
+
                 if (drinksConsumed == 1) {
                     initialDate = calendar.getTime();
+                    prevDate = calendar.getTime();
                 }
-                prevDate = calendar.getTime();
-                calendar = Calendar.getInstance(); // Update
 
                 TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
                 TextView BAC = (TextView) findViewById(R.id.BAC);
@@ -89,7 +88,7 @@ public class DemoActivity extends AppCompatActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
-        }
+        }//onCreate
 
         @Override
         public void onStart() {
@@ -105,10 +104,13 @@ public class DemoActivity extends AppCompatActivity {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
             return inflater.inflate(R.layout.settings, container, false);
+
         }//onCreateView
 
     }//settingsDialog
+
 
     public int elapsedTime(Date date)
     {
@@ -126,10 +128,9 @@ public class DemoActivity extends AppCompatActivity {
     {
 
         EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
-
         setWeight(Integer.parseInt(weight_input.getText().toString()));
 
-    }
+    }//submit button from dialog fragment
 
     public void setWeight(int wt)
     {
