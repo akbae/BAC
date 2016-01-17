@@ -181,7 +181,7 @@ public class DemoActivity extends AppCompatActivity {
                 if (drinksConsumed != 0) {
                     TextView BAC = (TextView) findViewById(R.id.BAC);
                     String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
-                                                                        userSex, userWeight, 60));
+                                            userSex, userWeight, elapsedTime(calendar.getTime())));
                     BAC.setText(BAC_text);
                 }
                 return true;
