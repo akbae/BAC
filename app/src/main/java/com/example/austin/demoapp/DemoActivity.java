@@ -1,5 +1,6 @@
 package com.example.austin.demoapp;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -51,77 +52,82 @@ public class DemoActivity extends AppCompatActivity {
                 drinkTimes.add(calendar.getTime());
                 drinksConsumed = drinkTimes.size();
 
-                // Initialize TextViews for display variables
-                TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-                TextView BAC = (TextView) findViewById(R.id.BAC);
-                TextView timeFromStart = (TextView) findViewById(R.id.time_start);
-                TextView timeFromLast = (TextView) findViewById(R.id.time_last);
-
-                // Count / BAC
-                String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
-                drinkCount.setText(drinkText);
-
-                if (userWeight != 0) {
-                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
-                                            userSex, userWeight, elapsedTime(calendar.getTime())));
-                    BAC.setText(BAC_text);
-                }//if userWeight
-                else {  BAC.setText("Input settings for BAC calculation");  }
-
-                // Time
-                String time_start = "Time since starting: " + String.valueOf(
-                                                        elapsedTime(calendar.getTime())) + " mins";
-                timeFromStart.setText(time_start);
-
-
-                String time_last = "Time since last drink: " + String.valueOf(prevTime(
-                                                                    calendar.getTime())) + " mins";
-                timeFromLast.setText(time_last);
-
+                drinkDisplay();
+                BACDisplay();
+                timeDisplay();
 
                 // Snackbar display for action
-                Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
+                Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             // Snackbar undo click
                             public void onClick(View view) {
-                                drinksConsumed--;
-                                drinkTimes.remove(drinksConsumed);
+                                if (drinksConsumed != 0) {
+                                    drinksConsumed--;
+                                    drinkTimes.remove(drinksConsumed);
+                                }//if drinksConsumed
 
                                 // Re-display
-                                TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-                                TextView BAC = (TextView) findViewById(R.id.BAC);
-                                TextView timeFromStart = (TextView) findViewById(R.id.time_start);
-                                TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
-                                // Count / BAC
-                                String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
-                                drinkCount.setText(drinkText);
+                                drinkDisplay();
 
-                                if (userWeight != 0) {
-                                    String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(
-                                            drinksConsumed, userSex, userWeight, elapsedTime(calendar.getTime())));
+                                if (drinksConsumed != 0) {
+                                    BACDisplay();
+                                    timeDisplay();
+
+                                }//if drinksConsumed
+                                else {
+                                    TextView BAC = (TextView) findViewById(R.id.BAC);
+                                    String BAC_text = "";
                                     BAC.setText(BAC_text);
-                                }//if userWeight
-                                else {  BAC.setText("Input settings for BAC calculation");  }
-
-                                // Time
-                                String time_start = "Time since starting: " + String.valueOf(
-                                                        elapsedTime(calendar.getTime())) + " mins";
-                                timeFromStart.setText(time_start);
-
-
-                                String time_last = "Time since last drink: " + String.valueOf(prevTime(
-                                                                    calendar.getTime())) + " mins";
-                                timeFromLast.setText(time_last);
+                                }//else
                             }//onClick
-                        }).show();
+                        });
+
+                snackbar.setActionTextColor(Color.RED);
+                snackbar.show();
 
             }//onClick
 
         });//fab.setOnClickListener
 
     }//onCreate
+
+    public void drinkDisplay() {
+
+        TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+        String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
+        drinkCount.setText(drinkText);
+
+    }//drinkDisplay
+
+    public void BACDisplay() {
+
+        TextView BAC = (TextView) findViewById(R.id.BAC);
+        if (userWeight != 0) {
+            String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
+                    userSex, userWeight, elapsedTime(calendar.getTime())));
+            BAC.setText(BAC_text);
+        }//if userWeight
+        else {  BAC.setText("Input settings for BAC calculation");  }
+
+    }//BACDisplay
+
+    public void timeDisplay() {
+
+        TextView timeFromStart = (TextView) findViewById(R.id.time_start);
+        TextView timeFromLast = (TextView) findViewById(R.id.time_last);
+
+        String time_start = "Time since starting: " + String.valueOf(
+                elapsedTime(calendar.getTime())) + " mins";
+        timeFromStart.setText(time_start);
+
+
+        String time_last = "Time since last drink: " + String.valueOf(prevTime(
+                calendar.getTime())) + " mins";
+        timeFromLast.setText(time_last);
+
+    }//timeDisplay
 
     // Opens on menu option selection
     public static class settingsDialog extends DialogFragment {
@@ -157,7 +163,7 @@ public class DemoActivity extends AppCompatActivity {
     // Calculates time between initial Date and input Date
     public int elapsedTime(Date date)
     {
-        return timeDiff(drinkTimes.get(0),date);
+        return drinksConsumed != 0 ? timeDiff(drinkTimes.get(0),date) : 0;
     }//elapsedTime
 
     //Calculates time between previous Date and input Date
@@ -195,7 +201,7 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
-        return (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time; //BAC Formula
+        return drinks != 0 ? (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0; //BAC Formula
 
     }//BAC_calc
 
@@ -224,22 +230,16 @@ public class DemoActivity extends AppCompatActivity {
 
             case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
-                    if (BAC_calc(drinksConsumed,userSex,userWeight,60) != -1.0) {
-                        TextView BAC = (TextView) findViewById(R.id.BAC);
-
-                        String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
-                                            userSex, userWeight, elapsedTime(calendar.getTime())));
-                        BAC.setText(BAC_text);
-                    }//if BAC_calc
+                    BACDisplay();
+                    timeDisplay();
                 }//if drinksConsumed
                 return true;
 
             case R.id.reset: // Reset option - resets drink counter to 0
+                drinkTimes = new ArrayList<>();
                 drinksConsumed = 0;
-                TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-                drinkCount.setText("Drink Count: 0");
-                TextView BAC = (TextView) findViewById(R.id.BAC);
-                BAC.setText("");
+                drinkDisplay();
+                BACDisplay();
                 return true;
         }//switch
 
