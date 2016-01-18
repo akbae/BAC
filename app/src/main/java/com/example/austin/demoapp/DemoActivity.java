@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,42 +47,54 @@ public class DemoActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             // Clicking FAB
-            public void onClick(View view) {
+            public void onClick(View view) {    addDrink(view); }//onClick
 
-                calendar = Calendar.getInstance(); // Update to now
-                drinkTimes.add(calendar.getTime());
-                drinksConsumed = drinkTimes.size();
-
-                drinkDisplay();
-                BACDisplay();
-                timeDisplay();
-
-                // Snackbar display for action
-                Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
-                        .setAction("UNDO", new View.OnClickListener() {
-                            @Override
-                            // Snackbar undo click
-                            public void onClick(View view) {
-                                if (drinksConsumed != 0) {
-                                    drinksConsumed--;
-                                    drinkTimes.remove(drinksConsumed);
-                                }//if drinksConsumed
-
-                                // Re-display
-                                drinkDisplay();
-                                BACDisplay();
-                                timeDisplay();
-
-                            }//onClick
-                        });
-
-                snackbar.setActionTextColor(Color.RED);
-                snackbar.show();
-
-            }//onClick
         });//fab.setOnClickListener
     }//onCreate
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
+            addDrink(findViewById(android.R.id.content));
+        }//if keyCode
+        return true;
+    }//onKeyDown
+
+
+    // Changes variables for calculation and displays text/snackbar
+    public void addDrink(View view){
+
+        calendar = Calendar.getInstance(); // Update to now
+        drinkTimes.add(calendar.getTime());
+        drinksConsumed = drinkTimes.size();
+
+        drinkDisplay();
+        BACDisplay();
+        timeDisplay();
+
+        // Snackbar display for action
+        Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    // Snackbar undo click
+                    public void onClick(View view) {
+                        if (drinksConsumed != 0) {
+                            drinksConsumed--;
+                            drinkTimes.remove(drinksConsumed);
+                        }//if drinksConsumed
+
+                        // Re-display
+                        drinkDisplay();
+                        BACDisplay();
+                        timeDisplay();
+
+                    }//onClick
+                });
+
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.show();
+
+    }//addDrink
 
     // Opens on menu option selection
     public static class settingsDialog extends DialogFragment {
