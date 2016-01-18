@@ -61,79 +61,6 @@ public class DemoActivity extends AppCompatActivity {
         return true;
     }//onKeyDown
 
-
-    // Changes variables for calculation and displays text/snackbar
-    public void addDrink(View view){
-
-        calendar = Calendar.getInstance(); // Update to now
-        drinkTimes.add(calendar.getTime());
-        drinksConsumed = drinkTimes.size();
-
-        drinkDisplay();
-        BACDisplay();
-        timeDisplay();
-
-        // Snackbar display for action
-        Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", new View.OnClickListener() {
-                    @Override
-                    // Snackbar undo click
-                    public void onClick(View view) {
-                        if (drinksConsumed != 0) {
-                            drinksConsumed--;
-                            drinkTimes.remove(drinksConsumed);
-                        }//if drinksConsumed
-
-                        // Re-display
-                        drinkDisplay();
-                        BACDisplay();
-                        timeDisplay();
-
-                    }//onClick
-                });
-
-        snackbar.setActionTextColor(Color.RED);
-        snackbar.show();
-
-    }//addDrink
-
-    // Opens on menu option selection
-    public static class settingsDialog extends DialogFragment {
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
-        }//onCreate
-
-        @Override
-        public void onStart() {
-            super.onStart();
-            Dialog d = getDialog();
-            if (d!=null){
-                int width = ViewGroup.LayoutParams.MATCH_PARENT;
-                int height = ViewGroup.LayoutParams.MATCH_PARENT;
-                d.getWindow().setLayout(width, height);
-            }//if
-        }//onStart
-
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-            return inflater.inflate(R.layout.settings, container, false);
-
-        }//onCreateView
-
-    }//settingsDialog
-
-    // Event handler for submit button on settingsDialog
-    public void submit(View view) {
-        EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
-        userWeight = Integer.parseInt(weight_input.getText().toString());
-    }//submit
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -177,6 +104,42 @@ public class DemoActivity extends AppCompatActivity {
     }//onOptionsItemsSelected
 
 
+    // Changes variables for calculation and displays text/snackbar
+    public void addDrink(View view){
+
+        calendar = Calendar.getInstance(); // Update to now
+        drinkTimes.add(calendar.getTime());
+        drinksConsumed = drinkTimes.size();
+
+        drinkDisplay();
+        BACDisplay();
+        timeDisplay();
+
+        // Snackbar display for action
+        Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    // Snackbar undo click
+                    public void onClick(View view) {
+                        if (drinksConsumed != 0) {
+                            drinksConsumed--;
+                            drinkTimes.remove(drinksConsumed);
+                        }//if drinksConsumed
+
+                        // Re-display
+                        drinkDisplay();
+                        BACDisplay();
+                        timeDisplay();
+
+                    }//onClick
+                });
+
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.show();
+
+    }//addDrink
+
+
     // Calculation Methods
 
 
@@ -184,7 +147,7 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
-        return drinks != 0 ? (drinks * 0.6 * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0; //BAC Formula
+        return drinks != 0 ? (drinks * 0.6 * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0.0; //BAC Formula
 
     }//BAC_calc
 
@@ -218,6 +181,27 @@ public class DemoActivity extends AppCompatActivity {
         }//catch
     }//prevTime
 
+    // Converts int minutes to a string formatted as time
+    public String minToDisplay(int minutes)
+    {
+        String hrText = "";
+        String minText = "";
+
+        int hours = minutes / 60;
+        minutes = minutes % 60;
+
+        if (hours != 0) {
+            hrText = String.valueOf(hours) + " hr ";
+        }//if hours
+
+        if (hours == 0 || minutes != 0) {
+            minText = String.valueOf(minutes) + " min";
+        }//if hours
+
+        return hrText + minText;
+
+    }//minToDisplay
+
 
     // Display Methods
 
@@ -247,15 +231,50 @@ public class DemoActivity extends AppCompatActivity {
         TextView timeFromStart = (TextView) findViewById(R.id.time_start);
         TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
-        String time_start = "Time since starting: " + String.valueOf(
-                elapsedTime(calendar.getTime())) + " mins";
+        String time_start = "Time since starting: " + minToDisplay(elapsedTime(calendar.getTime()));
         timeFromStart.setText(time_start);
 
 
-        String time_last = "Time since last drink: " + String.valueOf(prevTime(
-                calendar.getTime())) + " mins";
+        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime()));
         timeFromLast.setText(time_last);
 
     }//timeDisplay
+
+
+    // Opens on menu option selection
+    public static class settingsDialog extends DialogFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setStyle(DialogFragment.STYLE_NORMAL, R.style.settings_dialog);
+        }//onCreate
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            Dialog d = getDialog();
+            if (d!=null){
+                int width = ViewGroup.LayoutParams.MATCH_PARENT;
+                int height = ViewGroup.LayoutParams.MATCH_PARENT;
+                d.getWindow().setLayout(width, height);
+            }//if
+        }//onStart
+
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+            return inflater.inflate(R.layout.settings, container, false);
+
+        }//onCreateView
+
+    }//settingsDialog
+
+    // Event handler for submit button on settingsDialog
+    public void submit(View view) {
+        EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
+        userWeight = Integer.parseInt(weight_input.getText().toString());
+    }//submit
 
 }//DemoActivity
