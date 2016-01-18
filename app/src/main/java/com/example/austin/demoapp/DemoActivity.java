@@ -53,6 +53,7 @@ public class DemoActivity extends AppCompatActivity {
     }//onCreate
 
     @Override
+    // Volume up button adds a drink
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
             addDrink(findViewById(android.R.id.content));
@@ -183,7 +184,7 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
-        return drinks != 0 ? (drinks * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0; //BAC Formula
+        return drinks != 0 ? (drinks * 0.6 * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0; //BAC Formula
 
     }//BAC_calc
 
