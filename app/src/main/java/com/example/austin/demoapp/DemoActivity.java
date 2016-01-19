@@ -27,6 +27,7 @@ public class DemoActivity extends AppCompatActivity {
     public int drinksConsumed;
     public boolean userSex;
     public int userWeight;
+    public double BAC = 0;
 
     // For time calculations
     public Calendar calendar;
@@ -51,6 +52,7 @@ public class DemoActivity extends AppCompatActivity {
 
         });//fab.setOnClickListener
     }//onCreate
+
 
     @Override
     // Volume up button adds a drink
@@ -88,6 +90,7 @@ public class DemoActivity extends AppCompatActivity {
                 if (drinksConsumed != 0) {
                     calendar = Calendar.getInstance();
                     BACDisplay();
+                    drinkDisplay();
                     timeDisplay(true);
                 }//if drinksConsumed
                 return true;
@@ -95,8 +98,8 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.reset: // Reset option - resets drink counter to 0 and clears time text
                 drinkTimes = new ArrayList<>();
                 drinksConsumed = 0;
-                drinkDisplay();
                 BACDisplay();
+                drinkDisplay();
                 TextView time1 = (TextView) findViewById(R.id.time_start);
                 TextView time2 = (TextView) findViewById(R.id.time_last);
 
@@ -110,6 +113,28 @@ public class DemoActivity extends AppCompatActivity {
 
     }//onOptionsItemsSelected
 
+    // Returns different colors based on BAC
+    public int BAC_color()
+    {
+        int change;
+        if (BAC > 0.13) {
+            change = Color.RED;
+        }//red
+        else if (BAC > 0.08) {
+            change = Color.rgb(240,110,0);
+        }//orange
+        else if (BAC > 0.04) {
+            change = Color.rgb(255,255,0);
+        }//yellow
+        else if (BAC > 0) {
+            change = Color.rgb(0,200,0);
+        }//green
+        else {
+            change = Color.BLUE;
+        }//blue
+
+        return change;
+    }//BAC_color
 
     // Changes variables for calculation and displays text/snackbar
     public void addDrink(View view){
@@ -118,8 +143,8 @@ public class DemoActivity extends AppCompatActivity {
         drinkTimes.add(calendar.getTime());
         drinksConsumed = drinkTimes.size();
 
-        drinkDisplay();
         BACDisplay();
+        drinkDisplay();
         timeDisplay(false);
 
         // Snackbar display for action
@@ -136,8 +161,8 @@ public class DemoActivity extends AppCompatActivity {
                         calendar = Calendar.getInstance();
 
                         // Re-display
-                        drinkDisplay();
                         BACDisplay();
+                        drinkDisplay();
                         timeDisplay(true);
 
                     }//onClick
@@ -220,18 +245,20 @@ public class DemoActivity extends AppCompatActivity {
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
         String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
         drinkCount.setText(drinkText);
+        drinkCount.setTextColor(BAC_color());
 
     }//drinkDisplay
 
     public void BACDisplay() {
 
-        TextView BAC = (TextView) findViewById(R.id.BAC);
+        TextView BAC_view = (TextView) findViewById(R.id.BAC);
         if (userWeight != 0) {
-            String BAC_text = "BAC: " + String.format("%1.2g%n", BAC_calc(drinksConsumed,
-                    userSex, userWeight, elapsedTime(calendar.getTime())));
-            BAC.setText(BAC_text);
+            BAC = BAC_calc(drinksConsumed,userSex, userWeight, elapsedTime(calendar.getTime()));
+            String BAC_text = "BAC: " + String.format("%1.2g%n", BAC);
+            BAC_view.setText(BAC_text);
+            BAC_view.setTextColor(BAC_color());
         }//if userWeight
-        else {  BAC.setText("Input settings for BAC calculation");  }
+        else {  BAC_view.setText("Input settings for BAC calculation");  }
 
     }//BACDisplay
 
