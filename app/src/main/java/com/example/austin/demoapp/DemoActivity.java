@@ -87,7 +87,7 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
                     BACDisplay();
-                    timeDisplay();
+                    timeDisplay(true);
                 }//if drinksConsumed
                 return true;
 
@@ -113,7 +113,7 @@ public class DemoActivity extends AppCompatActivity {
 
         drinkDisplay();
         BACDisplay();
-        timeDisplay();
+        timeDisplay(false);
 
         // Snackbar display for action
         Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
@@ -129,7 +129,7 @@ public class DemoActivity extends AppCompatActivity {
                         // Re-display
                         drinkDisplay();
                         BACDisplay();
-                        timeDisplay();
+                        timeDisplay(true);
 
                     }//onClick
                 });
@@ -171,10 +171,10 @@ public class DemoActivity extends AppCompatActivity {
     }//elapsedTime
 
     //Calculates time between previous Date and input Date
-    public int prevTime(Date date)
+    public int prevTime(Date date, boolean isUpdate)
     {
         try {
-            return timeDiff(drinkTimes.get(drinksConsumed-2),date);
+            return timeDiff(drinkTimes.get(drinksConsumed-2 + (isUpdate ? 1 : 0)),date);
         }//try
         catch (IndexOutOfBoundsException e) {
             return elapsedTime(date);
@@ -226,7 +226,7 @@ public class DemoActivity extends AppCompatActivity {
 
     }//BACDisplay
 
-    public void timeDisplay() {
+    public void timeDisplay(boolean isUpdate) {
 
         TextView timeFromStart = (TextView) findViewById(R.id.time_start);
         TextView timeFromLast = (TextView) findViewById(R.id.time_last);
@@ -235,7 +235,7 @@ public class DemoActivity extends AppCompatActivity {
         timeFromStart.setText(time_start);
 
 
-        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime()));
+        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime(),isUpdate));
         timeFromLast.setText(time_last);
 
     }//timeDisplay
