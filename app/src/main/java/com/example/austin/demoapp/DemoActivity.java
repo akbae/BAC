@@ -1,5 +1,6 @@
 package com.example.austin.demoapp;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -89,8 +90,9 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
                     calendar = Calendar.getInstance();
-                    BACDisplay();
                     drinkDisplay();
+                    BACDisplay();
+                    changeColor();
                     timeDisplay(true);
                 }//if drinksConsumed
                 return true;
@@ -98,8 +100,9 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.reset: // Reset option - resets drink counter to 0 and clears time text
                 drinkTimes = new ArrayList<>();
                 drinksConsumed = 0;
-                BACDisplay();
                 drinkDisplay();
+                BACDisplay();
+                changeColor();
                 TextView time1 = (TextView) findViewById(R.id.time_start);
                 TextView time2 = (TextView) findViewById(R.id.time_last);
 
@@ -113,24 +116,37 @@ public class DemoActivity extends AppCompatActivity {
 
     }//onOptionsItemsSelected
 
+    public void changeColor() {
+
+        TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+        TextView BAC_view = (TextView) findViewById(R.id.BAC);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        int color = BAC_color();
+
+        drinkCount.setTextColor(color);
+        BAC_view.setTextColor(color);
+        fab.setBackgroundTintList(ColorStateList.valueOf(color));
+        toolbar.setBackgroundTintList(ColorStateList.valueOf(color));
+
+    }//changeColor
+
     // Returns different colors based on BAC
     public int BAC_color()
     {
         int change;
-        if (BAC > 0.13) {
-            change = Color.RED;
+        if (BAC > 0.12) {
+            change = Color.rgb(220,0,0);
         }//red
-        else if (BAC > 0.08) {
+        else if (BAC > 0.05) {
             change = Color.rgb(240,110,0);
         }//orange
-        else if (BAC > 0.04) {
-            change = Color.rgb(255,255,0);
-        }//yellow
         else if (BAC > 0) {
             change = Color.rgb(0,200,0);
         }//green
         else {
-            change = Color.BLUE;
+            change = Color.rgb(0,0,220);
         }//blue
 
         return change;
@@ -143,8 +159,9 @@ public class DemoActivity extends AppCompatActivity {
         drinkTimes.add(calendar.getTime());
         drinksConsumed = drinkTimes.size();
 
-        BACDisplay();
         drinkDisplay();
+        BACDisplay();
+        changeColor();
         timeDisplay(false);
 
         // Snackbar display for action
@@ -161,8 +178,9 @@ public class DemoActivity extends AppCompatActivity {
                         calendar = Calendar.getInstance();
 
                         // Re-display
-                        BACDisplay();
                         drinkDisplay();
+                        BACDisplay();
+                        changeColor();
                         timeDisplay(true);
 
                     }//onClick
@@ -245,7 +263,6 @@ public class DemoActivity extends AppCompatActivity {
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
         String drinkText = "Drink Count: " + String.valueOf(drinksConsumed);
         drinkCount.setText(drinkText);
-        drinkCount.setTextColor(BAC_color());
 
     }//drinkDisplay
 
@@ -256,7 +273,6 @@ public class DemoActivity extends AppCompatActivity {
             BAC = BAC_calc(drinksConsumed,userSex, userWeight, elapsedTime(calendar.getTime()));
             String BAC_text = "BAC: " + String.format("%1.2g%n", BAC);
             BAC_view.setText(BAC_text);
-            BAC_view.setTextColor(BAC_color());
         }//if userWeight
         else {  BAC_view.setText("Input settings for BAC calculation");  }
 
