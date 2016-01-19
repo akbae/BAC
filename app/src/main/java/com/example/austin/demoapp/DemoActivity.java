@@ -86,16 +86,23 @@ public class DemoActivity extends AppCompatActivity {
 
             case R.id.update: // Update option - updates BAC (due to time)
                 if (drinksConsumed != 0) {
+                    calendar = Calendar.getInstance();
                     BACDisplay();
                     timeDisplay(true);
                 }//if drinksConsumed
                 return true;
 
-            case R.id.reset: // Reset option - resets drink counter to 0
+            case R.id.reset: // Reset option - resets drink counter to 0 and clears time text
                 drinkTimes = new ArrayList<>();
                 drinksConsumed = 0;
                 drinkDisplay();
                 BACDisplay();
+                TextView time1 = (TextView) findViewById(R.id.time_start);
+                TextView time2 = (TextView) findViewById(R.id.time_last);
+
+                time1.setText("");
+                time2.setText("");
+
                 return true;
         }//switch
 
@@ -125,6 +132,8 @@ public class DemoActivity extends AppCompatActivity {
                             drinksConsumed--;
                             drinkTimes.remove(drinksConsumed);
                         }//if drinksConsumed
+
+                        calendar = Calendar.getInstance();
 
                         // Re-display
                         drinkDisplay();
