@@ -1,5 +1,7 @@
 package com.example.austin.demoapp;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -25,13 +27,17 @@ import java.util.Date;
 
 public class DemoActivity extends AppCompatActivity {
 
+    public static final String FILE_NAME = "settings";
+    public static final String SEX_KEY = "settings_sex";
+    public static final String WEIGHT_KEY = "settings_weight";
+
     public int drinksConsumed;
     public boolean userSex;
     public int userWeight;
     public double BAC = 0;
 
     // For time calculations
-    public Calendar calendar;
+    public Calendar calendar = Calendar.getInstance();
     public ArrayList<Date> drinkTimes = new ArrayList<>();
 
     @Override
@@ -45,6 +51,8 @@ public class DemoActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
         drinkCount.setText("Drink Count: 0");
+
+        load(getApplicationContext());
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,6 +124,29 @@ public class DemoActivity extends AppCompatActivity {
 
     }//onOptionsItemsSelected
 
+    public void load(Context context)
+    {
+        SharedPreferences settings;
+        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        userSex = settings.getBoolean(SEX_KEY, false);
+        userWeight = settings.getInt(WEIGHT_KEY, 0);
+    }//load
+
+    public void save(Context context, Boolean isMale, int weight)
+    {
+        SharedPreferences settings;
+        SharedPreferences.Editor editor;
+        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        editor = settings.edit();
+        editor.clear();
+
+        editor.putBoolean(SEX_KEY, isMale);
+        editor.putInt(WEIGHT_KEY, weight);
+        editor.commit();
+    }//save
+
+
+    // Changes the colors of the drink/BAC text, floating action button, and toolbar
     public void changeColor() {
 
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
@@ -136,10 +167,10 @@ public class DemoActivity extends AppCompatActivity {
     public int BAC_color()
     {
         int change;
-        if (BAC > 0.12) {
+        if (BAC > 0.20) {
             change = Color.rgb(220,0,0);
         }//red
-        else if (BAC > 0.05) {
+        else if (BAC > 0.12) {
             change = Color.rgb(240,110,0);
         }//orange
         else if (BAC > 0) {
@@ -198,16 +229,10 @@ public class DemoActivity extends AppCompatActivity {
     // Calculates BAC based on drinks consumed, sex, weight, and time (min) since start
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
-        double sexRatio = sex ? 0.73 : 0.66; // sex ? male : female
-        return drinks != 0 ? (drinks * 0.6 * 5.14 / weight * sexRatio) - 0.015 / 60 * time : 0.0; //BAC Formula
+        double sexRatio = sex ? 0.58 : 0.49; // sex ? male : female
+        return drinks != 0 ? (drinks * 0.967 / (weight * 0.454 * sexRatio)) - 0.017 / 60 * time : 0.0; //BAC Formula
 
     }//BAC_calc
-
-    // Returns true for male selection and false for female selection
-    public void sexSelected(View view)
-    {
-        userSex = view.getId() == R.id.male;
-    }//sexSelected
 
     // Returns difference in minutes
     public int timeDiff(Date date_1, Date date_2)
@@ -321,12 +346,21 @@ public class DemoActivity extends AppCompatActivity {
 
         }//onCreateView
 
+
     }//settingsDialog
 
     // Event handler for submit button on settingsDialog
     public void submit(View view) {
         EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
         userWeight = Integer.parseInt(weight_input.getText().toString());
+        save(getApplicationContext(),userSex,userWeight);
     }//submit
+
+    // Event handler for radio buttons on settingsDialog:
+    // Returns true for male selection and false for female selection
+    public void sexSelected(View view)
+    {
+        userSex = view.getId() == R.id.male;
+    }//sexSelected
 
 }//DemoActivity

@@ -18,7 +18,8 @@
             android:layout_height="wrap_content"
             android:text="Sex: "
             android:id="@+id/sex_text"
-            android:textSize="28sp" />
+            android:textSize="28sp"
+            android:textColor="#ffffff" />
 
         <RadioGroup
             android:layout_width="wrap_content"
@@ -32,7 +33,9 @@
                 android:layout_height="wrap_content"
                 android:text="Male"
                 android:textSize="20sp"
-                android:onClick="sexSelected" />
+                android:onClick="sexSelected"
+                android:textColor="#ffffff"
+                android:buttonTint="#ffffff" />
 
             <RadioButton
                 android:id="@+id/female"
@@ -41,7 +44,9 @@
                 android:layout_height="wrap_content"
                 android:text="Female"
                 android:textSize="20sp"
-                android:onClick="sexSelected" />
+                android:onClick="sexSelected"
+                android:textColor="#ffffff"
+                android:buttonTint="#ffffff" />
         </RadioGroup>
 
     </LinearLayout>
@@ -62,9 +67,10 @@
             android:textSize="28sp"
             android:layout_below="@+id/linearLayout"
             android:layout_alignLeft="@+id/linearLayout"
-            android:layout_alignStart="@+id/linearLayout" />
+            android:layout_alignStart="@+id/linearLayout"
+            android:textColor="#ffffff" />
         <EditText
-            android:layout_width="wrap_content"
+            android:layout_width="79dp"
             android:layout_height="wrap_content"
             android:inputType="number"
             android:id="@+id/weight"

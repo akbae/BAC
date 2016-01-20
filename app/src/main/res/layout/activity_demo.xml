@@ -39,6 +39,7 @@
         android:layout_centerHorizontal="true"
         android:paddingBottom="10dp"
         android:layout_marginBottom="50dp"
-        android:src="@drawable/cup" />
+        android:src="@drawable/cup"
+        app:backgroundTint="#3147e4" />
 
 </RelativeLayout>
