@@ -365,8 +365,13 @@ public class DemoActivity extends AppCompatActivity {
     // Event handler for submit button on settingsDialog
     public void submit(View view) {
         EditText weight_input = (EditText) view.getRootView().findViewById(R.id.weight);
-        userWeight = Integer.parseInt(weight_input.getText().toString());
-        save(getApplicationContext(),userSex,userWeight);
+        try {
+            userWeight = Integer.parseInt(weight_input.getText().toString());
+            save(getApplicationContext(),userSex,userWeight);
+        }//try
+        catch(NumberFormatException e) { System.out.println("No input"); }// Do nothing
+        finish();
+        startActivity(getIntent());
     }//submit
 
     // Event handler for radio buttons on settingsDialog:
