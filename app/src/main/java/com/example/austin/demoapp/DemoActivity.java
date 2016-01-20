@@ -51,6 +51,7 @@ public class DemoActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
         drinkCount.setText("Drink Count: 0");
+        drinkCount.setTextColor(Color.rgb(0,150,255));
 
         load(getApplicationContext());
 
@@ -124,64 +125,6 @@ public class DemoActivity extends AppCompatActivity {
 
     }//onOptionsItemsSelected
 
-    public void load(Context context)
-    {
-        SharedPreferences settings;
-        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
-        userSex = settings.getBoolean(SEX_KEY, false);
-        userWeight = settings.getInt(WEIGHT_KEY, 0);
-    }//load
-
-    public void save(Context context, Boolean isMale, int weight)
-    {
-        SharedPreferences settings;
-        SharedPreferences.Editor editor;
-        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
-        editor = settings.edit();
-        editor.clear();
-
-        editor.putBoolean(SEX_KEY, isMale);
-        editor.putInt(WEIGHT_KEY, weight);
-        editor.commit();
-    }//save
-
-
-    // Changes the colors of the drink/BAC text, floating action button, and toolbar
-    public void changeColor() {
-
-        TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-        TextView BAC_view = (TextView) findViewById(R.id.BAC);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-        int color = BAC_color();
-
-        drinkCount.setTextColor(color);
-        BAC_view.setTextColor(color);
-        fab.setBackgroundTintList(ColorStateList.valueOf(color));
-        toolbar.setBackgroundTintList(ColorStateList.valueOf(color));
-
-    }//changeColor
-
-    // Returns different colors based on BAC
-    public int BAC_color()
-    {
-        int change;
-        if (BAC > 0.18) {
-            change = Color.rgb(220,0,0);
-        }//red
-        else if (BAC > 0.08) {
-            change = Color.rgb(240,110,0);
-        }//orange
-        else if (BAC > 0) {
-            change = Color.rgb(0,200,0);
-        }//green
-        else {
-            change = Color.rgb(0,0,220);
-        }//blue
-
-        return change;
-    }//BAC_color
 
     // Changes variables for calculation and displays text/snackbar
     public void addDrink(View view){
@@ -314,10 +257,78 @@ public class DemoActivity extends AppCompatActivity {
         timeFromStart.setText(time_start);
 
 
-        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime(),isUpdate));
+        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime(), isUpdate));
         timeFromLast.setText(time_last);
 
     }//timeDisplay
+
+
+    // Color Methods
+
+
+    // Changes the colors of the drink/BAC text, floating action button, and toolbar
+    public void changeColor() {
+
+        TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+        TextView BAC_view = (TextView) findViewById(R.id.BAC);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        int color = BAC_color();
+
+        drinkCount.setTextColor(color);
+        BAC_view.setTextColor(color);
+        fab.setBackgroundTintList(ColorStateList.valueOf(color));
+        toolbar.setBackgroundTintList(ColorStateList.valueOf(color));
+
+    }//changeColor
+
+    // Returns different colors based on BAC
+    public int BAC_color()
+    {
+        int change;
+        if (BAC > 0.18) {
+            change = Color.rgb(220,0,0);
+        }//red
+        else if (BAC > 0.08) {
+            change = Color.rgb(240,110,0);
+        }//orange
+        else if (BAC > 0) {
+            change = Color.rgb(0,200,0);
+        }//green
+        else {
+            change = Color.rgb(0,150,255);
+        }//blue
+
+        return change;
+    }//BAC_color
+
+
+    // Load/save methods
+
+
+    public void load(Context context)
+    {
+        SharedPreferences settings;
+        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        userSex = settings.getBoolean(SEX_KEY, false);
+        userWeight = settings.getInt(WEIGHT_KEY, 0);
+    }//load
+
+    public void save(Context context, Boolean isMale, int weight)
+    {
+        SharedPreferences settings;
+        SharedPreferences.Editor editor;
+        settings = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        editor = settings.edit();
+        editor.clear();
+
+        editor.putBoolean(SEX_KEY, isMale);
+        editor.putInt(WEIGHT_KEY, weight);
+        editor.commit();
+    }//save
+
+
 
 
     // Opens on menu option selection

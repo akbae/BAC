@@ -41,6 +41,6 @@
         android:paddingBottom="10dp"
         android:layout_marginBottom="60dp"
         android:src="@drawable/cup"
-        app:backgroundTint="#3147e4" />
+        app:backgroundTint="#0096FF" />
 
 </RelativeLayout>
