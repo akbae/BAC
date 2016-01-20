@@ -167,10 +167,10 @@ public class DemoActivity extends AppCompatActivity {
     public int BAC_color()
     {
         int change;
-        if (BAC > 0.20) {
+        if (BAC > 0.18) {
             change = Color.rgb(220,0,0);
         }//red
-        else if (BAC > 0.12) {
+        else if (BAC > 0.08) {
             change = Color.rgb(240,110,0);
         }//orange
         else if (BAC > 0) {
