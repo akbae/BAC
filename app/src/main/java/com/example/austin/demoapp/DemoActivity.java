@@ -217,7 +217,9 @@ public class DemoActivity extends AppCompatActivity {
                     }//onClick
                 });
 
-        snackbar.setActionTextColor(Color.RED);
+        snackbar.setActionTextColor(Color.WHITE);
+        ViewGroup group = (ViewGroup) snackbar.getView();
+        group.setBackgroundColor(BAC_color());
         snackbar.show();
 
     }//addDrink
