@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -21,24 +22,31 @@ import android.app.FragmentTransaction;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 
+import com.jjoe64.graphview.DefaultLabelFormatter;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
+import org.joda.time.DateTime;
+
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class DemoActivity extends AppCompatActivity {
 
-    public static final String FILE_NAME = "settings";
-    public static final String SEX_KEY = "settings_sex";
-    public static final String WEIGHT_KEY = "settings_weight";
+    private static final String FILE_NAME = "settings";
+    private static final String SEX_KEY = "settings_sex";
+    private static final String WEIGHT_KEY = "settings_weight";
 
-    public int drinksConsumed;
-    public boolean userSex;
-    public int userWeight;
-    public double BAC = 0;
+    private int drinksConsumed = 0;
+    private boolean userSex;
+    private int userWeight;
+    private double BAC = 0;
 
     // For time calculations
-    public Calendar calendar = Calendar.getInstance();
-    public ArrayList<Date> drinkTimes = new ArrayList<>();
+    private ArrayList<DateTime> drinkTimes = new ArrayList<>();
+    LineGraphSeries<DataPoint> series;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +58,32 @@ public class DemoActivity extends AppCompatActivity {
         // Drink increase button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
+
         drinkCount.setText("Drink Count: 0");
-        drinkCount.setTextColor(Color.rgb(0,150,255));
+        drinkCount.setTextColor(Color.rgb(0, 150, 255));
+
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask update = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        if (drinksConsumed != 0) {
+                            drinkDisplay();
+                            BACDisplay();
+                            changeColor();
+                            timeDisplay(true);
+                            try {
+                                graphDisplay();
+                            }//try
+                            catch(Exception e) { System.out.println("Graph not initialized"); }
+                        }//if drinksConsumed
+                    }//run
+                });//post
+            }//run
+        };//TimerTask
+        timer.schedule(update, 0, 60000);
 
         load(getApplicationContext());
 
@@ -96,22 +128,14 @@ public class DemoActivity extends AppCompatActivity {
                 sD_fragment.show(ft, "txn_tag");
                 return true;
 
-            case R.id.update: // Update option - updates BAC (due to time)
-                if (drinksConsumed != 0) {
-                    calendar = Calendar.getInstance();
-                    drinkDisplay();
-                    BACDisplay();
-                    changeColor();
-                    timeDisplay(true);
-                }//if drinksConsumed
-                return true;
-
             case R.id.reset: // Reset option - resets drink counter to 0 and clears time text
                 drinkTimes = new ArrayList<>();
                 drinksConsumed = 0;
                 drinkDisplay();
                 BACDisplay();
+                graphDisplay();
                 changeColor();
+
                 TextView time1 = (TextView) findViewById(R.id.time_start);
                 TextView time2 = (TextView) findViewById(R.id.time_last);
 
@@ -129,12 +153,15 @@ public class DemoActivity extends AppCompatActivity {
     // Changes variables for calculation and displays text/snackbar
     public void addDrink(View view){
 
-        calendar = Calendar.getInstance(); // Update to now
-        drinkTimes.add(calendar.getTime());
+        drinkTimes.add(new DateTime());
         drinksConsumed = drinkTimes.size();
+        if(drinksConsumed == 1) {
+            graphSetup();
+        }//if
 
         drinkDisplay();
         BACDisplay();
+        graphDisplay();
         changeColor();
         timeDisplay(false);
 
@@ -149,11 +176,10 @@ public class DemoActivity extends AppCompatActivity {
                             drinkTimes.remove(drinksConsumed);
                         }//if drinksConsumed
 
-                        calendar = Calendar.getInstance();
-
                         // Re-display
                         drinkDisplay();
                         BACDisplay();
+                        graphDisplay();
                         changeColor();
                         timeDisplay(true);
 
@@ -180,20 +206,20 @@ public class DemoActivity extends AppCompatActivity {
     }//BAC_calc
 
     // Returns difference in minutes
-    public int timeDiff(Date date_1, Date date_2)
+    public int timeDiff(DateTime date_1, DateTime date_2)
     {
-        long milli_diff = date_2.getTime() - date_1.getTime();
+        long milli_diff = date_2.getMillis() - date_1.getMillis();
         return (int) milli_diff / 1000 / 60;
     }//timeDiff
 
     // Calculates time between initial Date and input Date
-    public int elapsedTime(Date date)
+    public int elapsedTime(DateTime date)
     {
         return drinksConsumed != 0 ? timeDiff(drinkTimes.get(0),date) : 0;
     }//elapsedTime
 
     //Calculates time between previous Date and input Date
-    public int prevTime(Date date, boolean isUpdate)
+    public int prevTime(DateTime date, boolean isUpdate)
     {
         try {
             return timeDiff(drinkTimes.get(drinksConsumed-2 + (isUpdate ? 1 : 0)),date);
@@ -224,6 +250,15 @@ public class DemoActivity extends AppCompatActivity {
 
     }//minToDisplay
 
+    // Converts DateTime to concatenated double for graph formatting
+    public double dateToTimeDouble(DateTime date)
+    {
+        double time = date.getHourOfDay()*100;
+        time += date.getMinuteOfHour();
+
+        return time;
+    }//dateToTimeDouble
+
 
     // Display Methods
 
@@ -240,7 +275,7 @@ public class DemoActivity extends AppCompatActivity {
 
         TextView BAC_view = (TextView) findViewById(R.id.BAC);
         if (userWeight != 0) {
-            BAC = BAC_calc(drinksConsumed,userSex, userWeight, elapsedTime(calendar.getTime()));
+            BAC = BAC_calc(drinksConsumed,userSex, userWeight, elapsedTime(new DateTime()));
             String BAC_text = "BAC: " + String.format("%1.2g%n", BAC);
             BAC_view.setText(BAC_text);
         }//if userWeight
@@ -253,14 +288,60 @@ public class DemoActivity extends AppCompatActivity {
         TextView timeFromStart = (TextView) findViewById(R.id.time_start);
         TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
-        String time_start = "Time since starting: " + minToDisplay(elapsedTime(calendar.getTime()));
+        String time_start = "Time since starting: " + minToDisplay(elapsedTime(new DateTime()));
         timeFromStart.setText(time_start);
 
 
-        String time_last = "Time since last drink: " + minToDisplay(prevTime(calendar.getTime(), isUpdate));
+        String time_last = "Time since last drink: " + minToDisplay(prevTime(new DateTime(), isUpdate));
         timeFromLast.setText(time_last);
 
     }//timeDisplay
+
+    public void graphDisplay() {
+
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        DataPoint data = new DataPoint(dateToTimeDouble(new DateTime()),BAC);
+
+        series.appendData(data,true,240);
+
+        graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
+
+    }//graphDisplay
+
+    public void graphSetup() {
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    int hour = (((int) value) / 100) % 12 != 0 ? (((int) value) / 100) % 12 : 12;
+                    int min = ((int) value) % 100 != 0 ? ((int) value) % 100 : 0;
+                    return String.valueOf(hour) + String.format(":%02d", min);
+                }//if isValueX
+                else {
+                    return String.format("%1.2g%n",value);
+                }//
+            }//formatLabel
+        });//graph
+        graph.getGridLabelRenderer().setNumHorizontalLabels(4);
+        graph.getGridLabelRenderer().setNumVerticalLabels(4);
+        graph.getGridLabelRenderer().setGridColor(Color.WHITE);
+        graph.getGridLabelRenderer().setHorizontalLabelsColor(Color.WHITE);
+        graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
+
+        DataPoint[] data = new DataPoint[1];
+        data[0] = new DataPoint(dateToTimeDouble(drinkTimes.get(0)),BAC);
+        try {
+            series.resetData(data);
+        }//try
+        catch (NullPointerException e) {
+            series = new LineGraphSeries<>(data);
+
+            graph.addSeries(series);
+        }//catch
+
+    }//graphSetup
 
 
     // Color Methods
@@ -325,7 +406,7 @@ public class DemoActivity extends AppCompatActivity {
 
         editor.putBoolean(SEX_KEY, isMale);
         editor.putInt(WEIGHT_KEY, weight);
-        editor.commit();
+        editor.apply();
     }//save
 
 
