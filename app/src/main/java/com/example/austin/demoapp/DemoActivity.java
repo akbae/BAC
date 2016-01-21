@@ -24,6 +24,8 @@ import android.view.LayoutInflater;
 
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
@@ -46,7 +48,7 @@ public class DemoActivity extends AppCompatActivity {
 
     // For time calculations
     private ArrayList<DateTime> drinkTimes = new ArrayList<>();
-    LineGraphSeries<DataPoint> series;
+    private LineGraphSeries<DataPoint> series;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +63,9 @@ public class DemoActivity extends AppCompatActivity {
 
         drinkCount.setText("Drink Count: 0");
         drinkCount.setTextColor(Color.rgb(0, 150, 255));
+
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        graph.setVisibility(View.INVISIBLE);
 
         final Handler handler = new Handler();
         Timer timer = new Timer();
@@ -128,19 +133,9 @@ public class DemoActivity extends AppCompatActivity {
                 sD_fragment.show(ft, "txn_tag");
                 return true;
 
-            case R.id.reset: // Reset option - resets drink counter to 0 and clears time text
-                drinkTimes = new ArrayList<>();
-                drinksConsumed = 0;
-                drinkDisplay();
-                BACDisplay();
-                graphDisplay();
-                changeColor();
-
-                TextView time1 = (TextView) findViewById(R.id.time_start);
-                TextView time2 = (TextView) findViewById(R.id.time_last);
-
-                time1.setText("");
-                time2.setText("");
+            case R.id.reset: // Reset option - restarts activity
+                finish();
+                startActivity(getIntent());
 
                 return true;
         }//switch
@@ -155,15 +150,16 @@ public class DemoActivity extends AppCompatActivity {
 
         drinkTimes.add(new DateTime());
         drinksConsumed = drinkTimes.size();
-        if(drinksConsumed == 1) {
-            graphSetup();
-        }//if
 
         drinkDisplay();
         BACDisplay();
-        graphDisplay();
         changeColor();
         timeDisplay(false);
+
+        if(drinksConsumed == 1) {
+            graphSetup();
+        }//if
+        else {  graphDisplay(); }
 
         // Snackbar display for action
         Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
@@ -250,15 +246,6 @@ public class DemoActivity extends AppCompatActivity {
 
     }//minToDisplay
 
-    // Converts DateTime to concatenated double for graph formatting
-    public double dateToTimeDouble(DateTime date)
-    {
-        double time = date.getHourOfDay()*100;
-        time += date.getMinuteOfHour();
-
-        return time;
-    }//dateToTimeDouble
-
 
     // Display Methods
 
@@ -300,9 +287,13 @@ public class DemoActivity extends AppCompatActivity {
     public void graphDisplay() {
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
-        DataPoint data = new DataPoint(dateToTimeDouble(new DateTime()),BAC);
+        double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear()*86400;
+        DataPoint data = new DataPoint(now,BAC);
 
-        series.appendData(data,true,240);
+        graph.getViewport().setMaxX(now);
+        graph.getViewport().setMaxY(BAC);
+
+        series.appendData(data, true, 720);
 
         graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
 
@@ -310,28 +301,43 @@ public class DemoActivity extends AppCompatActivity {
 
     public void graphSetup() {
         GraphView graph = (GraphView) findViewById(R.id.graph);
-        graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+        GridLabelRenderer label = graph.getGridLabelRenderer();
+        Viewport view = graph.getViewport();
+        label.setLabelFormatter(new DefaultLabelFormatter() {
 
             @Override
             public String formatLabel(double value, boolean isValueX) {
                 if (isValueX) {
-                    int hour = (((int) value) / 100) % 12 != 0 ? (((int) value) / 100) % 12 : 12;
-                    int min = ((int) value) % 100 != 0 ? ((int) value) % 100 : 0;
+
+                    int hour = (((int) value) % 86400) / 3600;
+                    if (hour == 0) {
+                        hour = 12;
+                    }
+
+                    int min = ((((int) value) % 86400) % 3600) / 60;
+
                     return String.valueOf(hour) + String.format(":%02d", min);
                 }//if isValueX
                 else {
-                    return String.format("%1.2g%n",value);
-                }//
+                    return String.format("%1.2f%n", value);
+                }//else
             }//formatLabel
         });//graph
-        graph.getGridLabelRenderer().setNumHorizontalLabels(4);
-        graph.getGridLabelRenderer().setNumVerticalLabels(4);
-        graph.getGridLabelRenderer().setGridColor(Color.WHITE);
-        graph.getGridLabelRenderer().setHorizontalLabelsColor(Color.WHITE);
-        graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
+
+        double start = (double) drinkTimes.get(0).getSecondOfDay() + drinkTimes.get(0).getDayOfYear()*86400;
+
+        label.setGridColor(Color.WHITE);
+        label.setHorizontalLabelsColor(Color.WHITE);
+        label.setVerticalLabelsColor(BAC_color());
+        view.setXAxisBoundsManual(true);
+        view.setYAxisBoundsManual(true);
+        view.setMinX(start);
+        view.setMaxX(start + 240);
+        view.setMinY(0d);
+        view.setMaxY(0.05d);
 
         DataPoint[] data = new DataPoint[1];
-        data[0] = new DataPoint(dateToTimeDouble(drinkTimes.get(0)),BAC);
+        data[0] = new DataPoint(start,BAC);
         try {
             series.resetData(data);
         }//try
@@ -340,6 +346,8 @@ public class DemoActivity extends AppCompatActivity {
 
             graph.addSeries(series);
         }//catch
+
+        graph.setVisibility(View.VISIBLE);
 
     }//graphSetup
 
