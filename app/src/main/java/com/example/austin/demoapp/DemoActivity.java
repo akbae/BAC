@@ -79,10 +79,7 @@ public class DemoActivity extends AppCompatActivity {
                             BACDisplay();
                             changeColor();
                             timeDisplay(true);
-                            try {
-                                graphDisplay();
-                            }//try
-                            catch(Exception e) { System.out.println("Graph not initialized"); }
+                            graphDisplay();
                         }//if drinksConsumed
                     }//run
                 });//post
@@ -290,11 +287,12 @@ public class DemoActivity extends AppCompatActivity {
         double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear()*86400;
         DataPoint data = new DataPoint(now,BAC);
 
-        graph.getViewport().setMaxX(now);
-        graph.getViewport().setMaxY(BAC);
+        graph.getViewport().setMaxX(now+10);
+        graph.getViewport().setMaxY(BAC*1.1);
 
-        series.appendData(data, true, 720);
+        series.appendData(data, false, 720);
 
+        series.setColor(BAC_color());
         graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
 
     }//graphDisplay
@@ -309,17 +307,15 @@ public class DemoActivity extends AppCompatActivity {
             public String formatLabel(double value, boolean isValueX) {
                 if (isValueX) {
 
-                    int hour = (((int) value) % 86400) / 3600;
-                    if (hour == 0) {
-                        hour = 12;
-                    }
+                    int hour = ((((int) value) % 86400) / 3600) % 12;
+                    if (hour == 0) {    hour = 12;  }
 
                     int min = ((((int) value) % 86400) % 3600) / 60;
 
                     return String.valueOf(hour) + String.format(":%02d", min);
                 }//if isValueX
                 else {
-                    return String.format("%1.2f%n", value);
+                    return String.format("%1.2g%n", value);
                 }//else
             }//formatLabel
         });//graph
@@ -331,10 +327,11 @@ public class DemoActivity extends AppCompatActivity {
         label.setVerticalLabelsColor(BAC_color());
         view.setXAxisBoundsManual(true);
         view.setYAxisBoundsManual(true);
-        view.setMinX(start);
+        view.setMinX(start-5);
         view.setMaxX(start + 240);
         view.setMinY(0d);
         view.setMaxY(0.05d);
+        view.setScalable(true);
 
         DataPoint[] data = new DataPoint[1];
         data[0] = new DataPoint(start,BAC);
@@ -348,6 +345,7 @@ public class DemoActivity extends AppCompatActivity {
         }//catch
 
         graph.setVisibility(View.VISIBLE);
+        label.reloadStyles();
 
     }//graphSetup
 
