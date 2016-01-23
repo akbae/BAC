@@ -42,13 +42,14 @@ public class DemoActivity extends AppCompatActivity {
     private static final String WEIGHT_KEY = "settings_weight";
 
     private int drinksConsumed = 0;
-    private boolean userSex;
-    private int userWeight;
-    private double BAC = 0;
+    private Boolean userSex;
+    private Integer userWeight;
+    private double BAC = 0d;
 
     // For time calculations
     private ArrayList<DateTime> drinkTimes = new ArrayList<>();
     private LineGraphSeries<DataPoint> series;
+    private double BAC_max = 0d;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +86,7 @@ public class DemoActivity extends AppCompatActivity {
                 });//post
             }//run
         };//TimerTask
-        timer.schedule(update, 0, 60000);
+        timer.schedule(update, 0, 10000);
 
         load(getApplicationContext());
 
@@ -287,10 +288,12 @@ public class DemoActivity extends AppCompatActivity {
         double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear()*86400;
         DataPoint data = new DataPoint(now,BAC);
 
-        graph.getViewport().setMaxX(now+10);
-        graph.getViewport().setMaxY(BAC*1.1);
+        BAC_max = BAC > BAC_max ? BAC : BAC_max;
 
-        series.appendData(data, false, 720);
+        graph.getViewport().setMaxX(now + 10);
+        graph.getViewport().setMaxY(BAC_max * 1.25);
+
+        series.appendData(data, false, 4320);
 
         series.setColor(BAC_color());
         graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
@@ -327,7 +330,7 @@ public class DemoActivity extends AppCompatActivity {
         label.setVerticalLabelsColor(BAC_color());
         view.setXAxisBoundsManual(true);
         view.setYAxisBoundsManual(true);
-        view.setMinX(start-5);
+        view.setMinX(start - 5);
         view.setMaxX(start + 240);
         view.setMinY(0d);
         view.setMaxY(0.05d);
