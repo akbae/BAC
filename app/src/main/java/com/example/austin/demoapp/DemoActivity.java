@@ -1,6 +1,7 @@
 package com.example.austin.demoapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -86,9 +87,11 @@ public class DemoActivity extends AppCompatActivity {
                 });//post
             }//run
         };//TimerTask
-        timer.schedule(update, 0, 10000);
+        timer.schedule(update, 0, 15000);
 
         load(getApplicationContext());
+
+        startService(new Intent(this, ContinueService.class));
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -285,7 +288,7 @@ public class DemoActivity extends AppCompatActivity {
     public void graphDisplay() {
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
-        double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear()*86400;
+        double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
         DataPoint data = new DataPoint(now,BAC);
 
         BAC_max = BAC > BAC_max ? BAC : BAC_max;
@@ -293,7 +296,7 @@ public class DemoActivity extends AppCompatActivity {
         graph.getViewport().setMaxX(now + 10);
         graph.getViewport().setMaxY(BAC_max * 1.25);
 
-        series.appendData(data, false, 4320);
+        series.appendData(data, false, 2880);
 
         series.setColor(BAC_color());
         graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
@@ -318,7 +321,7 @@ public class DemoActivity extends AppCompatActivity {
                     return String.valueOf(hour) + String.format(":%02d", min);
                 }//if isValueX
                 else {
-                    return String.format("%1.2g%n", value);
+                    return String.format("%1.3f%n", value);
                 }//else
             }//formatLabel
         });//graph
