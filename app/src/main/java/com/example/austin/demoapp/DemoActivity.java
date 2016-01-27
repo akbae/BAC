@@ -87,6 +87,7 @@ public class DemoActivity extends AppCompatActivity {
                 });//post
             }//run
         };//TimerTask
+
         timer.schedule(update, 0, 15000);
 
         load(getApplicationContext());
