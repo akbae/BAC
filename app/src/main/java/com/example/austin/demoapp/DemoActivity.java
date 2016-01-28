@@ -93,8 +93,6 @@ public class DemoActivity extends AppCompatActivity {
 
         load(getApplicationContext());
 
-        startService(new Intent(this, ContinueService.class));
-
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             // Clicking FAB
@@ -137,6 +135,7 @@ public class DemoActivity extends AppCompatActivity {
                 return true;
 
             case R.id.reset: // Reset option - restarts activity
+                stopService(new Intent(this, ContinueService.class));
                 finish();
                 startActivity(getIntent());
                 return true;
@@ -166,6 +165,7 @@ public class DemoActivity extends AppCompatActivity {
 
         if(drinksConsumed == 1) {
             graphSetup();
+            startService(new Intent(this, ContinueService.class));
         }//if
         else {  graphDisplay(); }
 

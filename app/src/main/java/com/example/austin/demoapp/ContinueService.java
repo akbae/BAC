@@ -28,7 +28,7 @@ public class ContinueService extends Service {
         int notifyID = 1;
 
         NotificationCompat.Builder note = new NotificationCompat.Builder(this)
-                                        .setSmallIcon(R.mipmap.icon)
+                                        .setSmallIcon(R.mipmap.icon_white)
                                         .setContentTitle("BAC-track")
                                         .setContentText("You are drinking.");
         Intent BAC = new Intent(this, DemoActivity.class);
