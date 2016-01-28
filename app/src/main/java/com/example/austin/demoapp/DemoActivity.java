@@ -1,11 +1,12 @@
 package com.example.austin.demoapp;
 
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -29,7 +30,8 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import org.joda.time.DateTime;
 
@@ -50,7 +52,7 @@ public class DemoActivity extends AppCompatActivity {
 
     // For time calculations
     private ArrayList<DateTime> drinkTimes = new ArrayList<>();
-    private LineGraphSeries<DataPoint> series;
+    private PointsGraphSeries<DataPoint> series; // Change to multiple series for different colors
     private double BAC_max = 0d;
 
     @Override
@@ -183,7 +185,7 @@ public class DemoActivity extends AppCompatActivity {
                         // Re-display
                         drinkDisplay();
                         BACDisplay();
-                        graphDisplay();
+                        graphDisplay(); // Work on updating graph for undo
                         changeColor();
                         timeDisplay(true);
 
@@ -205,7 +207,8 @@ public class DemoActivity extends AppCompatActivity {
     public double BAC_calc(int drinks, boolean sex, int weight, double time)
     {
         double sexRatio = sex ? 0.58 : 0.49; // sex ? male : female
-        return drinks != 0 ? (drinks * 0.967 / (weight * 0.454 * sexRatio)) - 0.017 / 60 * time : 0.0; //BAC Formula
+        double calc = (drinks * 0.967 / (weight * 0.454 * sexRatio)) - 0.017 / 60 * time;
+        return drinks != 0 && calc > 0 ? calc : 0.0; //BAC Formula
 
     }//BAC_calc
 
@@ -300,7 +303,7 @@ public class DemoActivity extends AppCompatActivity {
 
         BAC_max = BAC > BAC_max ? BAC : BAC_max;
 
-        graph.getViewport().setMaxX(now + 10);
+        graph.getViewport().setMaxX(now + 10); // Change to be normalized
         graph.getViewport().setMaxY(BAC_max * 1.25);
 
         series.appendData(data, false, 2880);
@@ -352,12 +355,23 @@ public class DemoActivity extends AppCompatActivity {
             series.resetData(data);
         }//try
         catch (NullPointerException e) {
-            series = new LineGraphSeries<>(data);
+            series = new PointsGraphSeries<>(data);
 
             graph.addSeries(series);
         }//catch
 
         graph.setVisibility(View.VISIBLE);
+        series.setCustomShape(new PointsGraphSeries.CustomShape() {
+            @Override
+            public void draw(Canvas canvas, Paint paint, float x, float y, DataPointInterface dataPoint) {
+                paint.setStrokeWidth(10);
+                canvas.drawLine(x-20,y-20, x-10,y+20, paint);
+                canvas.drawLine(x-10,y+20, x+10,y+20, paint);
+                canvas.drawLine(x+10,y+20, x+20,y-20, paint);
+                canvas.drawLine(x+20,y-20, x-20,y-20, paint);
+            }
+        });
+        series.setColor(Color.rgb(0, 200, 0));
         label.reloadStyles();
 
     }//graphSetup
