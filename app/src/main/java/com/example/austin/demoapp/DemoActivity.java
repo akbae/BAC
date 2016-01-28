@@ -91,7 +91,7 @@ public class DemoActivity extends AppCompatActivity {
             }//run
         };//TimerTask
 
-        timer.schedule(update, 0, 30000);
+        timer.schedule(update, 0, 60000);
 
         load(getApplicationContext());
 
@@ -302,7 +302,9 @@ public class DemoActivity extends AppCompatActivity {
         DataPoint data = new DataPoint(now,BAC);
 
         BAC_max = BAC > BAC_max ? BAC : BAC_max;
-
+        if(elapsedTime(new DateTime()) > 60) {
+            graph.getViewport().setMinX(now - 3600);
+        }//if
         graph.getViewport().setMaxX(now + 10); // Change to be normalized
         graph.getViewport().setMaxY(BAC_max * 1.25);
 
@@ -348,6 +350,7 @@ public class DemoActivity extends AppCompatActivity {
         view.setMinY(0d);
         view.setMaxY(0.05d);
         view.setScalable(true);
+        view.setScrollable(true);
 
         DataPoint[] data = new DataPoint[1];
         data[0] = new DataPoint(start,BAC);
