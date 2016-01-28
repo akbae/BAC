@@ -1,5 +1,6 @@
 package com.example.austin.demoapp;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -138,8 +139,13 @@ public class DemoActivity extends AppCompatActivity {
             case R.id.reset: // Reset option - restarts activity
                 finish();
                 startActivity(getIntent());
-
                 return true;
+
+            case R.id.exit:
+                stopService(new Intent(this, ContinueService.class));
+                finish();
+                System.exit(0);
+
         }//switch
 
         return super.onOptionsItemSelected(item);
