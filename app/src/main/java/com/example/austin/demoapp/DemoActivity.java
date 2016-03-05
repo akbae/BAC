@@ -52,7 +52,9 @@ public class DemoActivity extends AppCompatActivity {
 
     // For time calculations
     private ArrayList<DateTime> drinkTimes = new ArrayList<>();
-    private PointsGraphSeries<DataPoint> series; // Change to multiple series for different colors
+    private PointsGraphSeries<DataPoint> series; // TODO: Change to multiple series for different colors
+    private ArrayList<DataPoint> datapoints = new ArrayList<>();
+    private PointsGraphSeries<DataPoint> current;
     private double BAC_max = 0d;
 
     @Override
@@ -62,45 +64,30 @@ public class DemoActivity extends AppCompatActivity {
         // Toolbar setup
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
         // Drink increase button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
-
-        drinkCount.setText("Drink Count: 0");
-        drinkCount.setTextColor(Color.rgb(0, 150, 255));
-
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        graph.setVisibility(View.INVISIBLE);
-
-        final Handler handler = new Handler();
-        Timer timer = new Timer();
-        TimerTask update = new TimerTask() {
-            @Override
-            public void run() {
-                handler.post(new Runnable() {
-                    public void run() {
-                        if (drinksConsumed != 0) {
-                            drinkDisplay();
-                            BACDisplay();
-                            changeColor();
-                            timeDisplay(true);
-                            graphDisplay();
-                        }//if drinksConsumed
-                    }//run
-                });//post
-            }//run
-        };//TimerTask
-
-        timer.schedule(update, 0, 60000);
-
-        load(getApplicationContext());
-
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             // Clicking FAB
             public void onClick(View view) {    addDrink(view); }//onClick
 
         });//fab.setOnClickListener
+
+        // Content initialization
+        drinkCount.setText("Drink Count: 0");
+        drinkCount.setTextColor(Color.rgb(0, 150, 255));
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        graph.setVisibility(View.INVISIBLE);
+
+        // Timed updates
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        update(handler, timer);
+
+        load(getApplicationContext());
+
     }//onCreate
 
 
@@ -160,6 +147,9 @@ public class DemoActivity extends AppCompatActivity {
         drinkTimes.add(new DateTime());
         drinksConsumed = drinkTimes.size();
 
+        double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
+        DataPoint data = new DataPoint(now,BAC);
+
         drinkDisplay();
         BACDisplay();
         changeColor();
@@ -169,7 +159,7 @@ public class DemoActivity extends AppCompatActivity {
             graphSetup();
             startService(new Intent(this, ContinueService.class));
         }//if
-        else {  graphDisplay(); }
+        else {  graphDisplay(false); }
 
         // Snackbar display for action
         Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
@@ -185,7 +175,8 @@ public class DemoActivity extends AppCompatActivity {
                         // Re-display
                         drinkDisplay();
                         BACDisplay();
-                        graphDisplay(); // Work on updating graph for undo
+
+                        graphDisplay(true); // TODO: Work on updating graph for undo
                         changeColor();
                         timeDisplay(true);
 
@@ -198,6 +189,40 @@ public class DemoActivity extends AppCompatActivity {
         snackbar.show();
 
     }//addDrink
+
+    public void update(final Handler h, Timer t) {
+
+        TimerTask updateTime = new TimerTask() {
+            @Override
+            public void run() {
+                h.post(new Runnable() {
+                    public void run() {
+                        if (drinksConsumed != 0) {
+                            timeDisplay(true);
+                        }//if drinksConsumed
+                    }//run
+                });//post
+            }//run
+        };//TimerTask
+
+        TimerTask updateBAC = new TimerTask() {
+            @Override
+            public void run() {
+                h.post(new Runnable() {
+                    public void run() {
+                        if (drinksConsumed != 0) {
+                            BACDisplay();
+                            changeColor();
+                        }//if drinksConsumed
+                    }//run
+                });//post
+            }//run
+        };//TimerTask
+
+        t.schedule(updateTime, 0, 60000);
+        t.schedule(updateBAC, 0, 240000);
+
+    }//update
 
 
     // Calculation Methods
@@ -295,20 +320,23 @@ public class DemoActivity extends AppCompatActivity {
 
     }//timeDisplay
 
-    public void graphDisplay() {
+    public void graphDisplay(boolean isUndo) {
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
         double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
-        DataPoint data = new DataPoint(now,BAC);
+        if(isUndo) {
+            datapoints.remove(datapoints.size()-1);
+            series.resetData(datapoints.toArray(new DataPoint[0]));
+        }
+        else {
+            DataPoint data = new DataPoint(now, BAC);
+            datapoints.add(data);
+            series.appendData(data, false, 100);
+        }
 
         BAC_max = BAC > BAC_max ? BAC : BAC_max;
-        if(elapsedTime(new DateTime()) > 60) {
-            graph.getViewport().setMinX(now - 3600);
-        }//if
         graph.getViewport().setMaxX(now + 10); // Change to be normalized
         graph.getViewport().setMaxY(BAC_max * 1.25);
-
-        series.appendData(data, false, 2880);
 
         series.setColor(BAC_color());
         graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
@@ -333,7 +361,7 @@ public class DemoActivity extends AppCompatActivity {
                     return String.valueOf(hour) + String.format(":%02d", min);
                 }//if isValueX
                 else {
-                    return String.format("%1.3f%n", value);
+                    return String.format("%1.2f%n", value);
                 }//else
             }//formatLabel
         });//graph
@@ -354,6 +382,7 @@ public class DemoActivity extends AppCompatActivity {
 
         DataPoint[] data = new DataPoint[1];
         data[0] = new DataPoint(start,BAC);
+        datapoints.add(data[0]);
         try {
             series.resetData(data);
         }//try
@@ -364,6 +393,7 @@ public class DemoActivity extends AppCompatActivity {
         }//catch
 
         graph.setVisibility(View.VISIBLE);
+
         series.setCustomShape(new PointsGraphSeries.CustomShape() {
             @Override
             public void draw(Canvas canvas, Paint paint, float x, float y, DataPointInterface dataPoint) {
