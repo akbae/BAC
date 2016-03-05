@@ -52,8 +52,20 @@ public class DemoActivity extends AppCompatActivity {
 
     // For time calculations
     private ArrayList<DateTime> drinkTimes = new ArrayList<>();
-    private PointsGraphSeries<DataPoint> series; // TODO: Change to multiple series for different colors
+
+    // For graph
+    private PointsGraphSeries<DataPoint> greenSeries;
+    private PointsGraphSeries<DataPoint> orangeSeries;
+    private PointsGraphSeries<DataPoint> redSeries;
+    private PointsGraphSeries<DataPoint> currentSeries;
+
+    private final int BLUE = Color.rgb(0,150,255);
+    private final int GREEN = Color.rgb(0,200,0);
+    private final int ORANGE = Color.rgb(240,110,0);
+    private final int RED = Color.rgb(220,0,0);
+
     private ArrayList<DataPoint> datapoints = new ArrayList<>();
+    private ArrayList[] positions = { new ArrayList(), new ArrayList(), new ArrayList() };
     private PointsGraphSeries<DataPoint> current;
     private double BAC_max = 0d;
 
@@ -67,17 +79,16 @@ public class DemoActivity extends AppCompatActivity {
 
         // Drink increase button
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        TextView drinkCount = (TextView) findViewById(R.id.DrinkCount);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             // Clicking FAB
-            public void onClick(View view) {    addDrink(view); }//onClick
+            public void onClick(View view) {
+                addDrink(view);
+            }//onClick
 
-        });//fab.setOnClickListener
+        });
 
         // Content initialization
-        drinkCount.setText("Drink Count: 0");
-        drinkCount.setTextColor(Color.rgb(0, 150, 255));
         GraphView graph = (GraphView) findViewById(R.id.graph);
         graph.setVisibility(View.INVISIBLE);
 
@@ -147,9 +158,6 @@ public class DemoActivity extends AppCompatActivity {
         drinkTimes.add(new DateTime());
         drinksConsumed = drinkTimes.size();
 
-        double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
-        DataPoint data = new DataPoint(now,BAC);
-
         drinkDisplay();
         BACDisplay();
         changeColor();
@@ -162,21 +170,25 @@ public class DemoActivity extends AppCompatActivity {
         else {  graphDisplay(false); }
 
         // Snackbar display for action
-        Snackbar snackbar = Snackbar.make(view, "1 drink consumed", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", new View.OnClickListener() {
+        Snackbar snackbar = Snackbar.make(view, R.string.snackbar, Snackbar.LENGTH_LONG)
+                .setAction(R.string.undo, new View.OnClickListener() {
                     @Override
                     // Snackbar undo click
                     public void onClick(View view) {
-                        if (drinksConsumed != 0) {
-                            drinksConsumed--;
-                            drinkTimes.remove(drinksConsumed);
-                        }//if drinksConsumed
+                        drinksConsumed--;
+                        drinkTimes.remove(drinksConsumed);
+
+                        if(drinksConsumed == 0) {
+                            GraphView graph = (GraphView) findViewById(R.id.graph);
+                            graph.setVisibility(View.INVISIBLE);
+                            graph.removeSeries(current);
+                            current = new PointsGraphSeries<>();
+                        }
 
                         // Re-display
                         drinkDisplay();
                         BACDisplay();
-
-                        graphDisplay(true); // TODO: Work on updating graph for undo
+                        graphDisplay(true);
                         changeColor();
                         timeDisplay(true);
 
@@ -198,6 +210,10 @@ public class DemoActivity extends AppCompatActivity {
                 h.post(new Runnable() {
                     public void run() {
                         if (drinksConsumed != 0) {
+                            GraphView graph = (GraphView) findViewById(R.id.graph);
+                            double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
+
+                            currentDisplay(graph, now);
                             timeDisplay(true);
                         }//if drinksConsumed
                     }//run
@@ -299,10 +315,11 @@ public class DemoActivity extends AppCompatActivity {
         TextView BAC_view = (TextView) findViewById(R.id.BAC);
         if (userWeight != 0) {
             BAC = BAC_calc(drinksConsumed,userSex, userWeight, elapsedTime(new DateTime()));
+            BAC_max = BAC > BAC_max ? BAC : BAC_max;
             String BAC_text = "BAC: " + String.format("%1.2g%n", BAC);
             BAC_view.setText(BAC_text);
         }//if userWeight
-        else {  BAC_view.setText("Input settings for BAC calculation");  }
+        else {  BAC_view.setText(R.string.init_settings);  }
 
     }//BACDisplay
 
@@ -311,11 +328,11 @@ public class DemoActivity extends AppCompatActivity {
         TextView timeFromStart = (TextView) findViewById(R.id.time_start);
         TextView timeFromLast = (TextView) findViewById(R.id.time_last);
 
-        String time_start = "Time since starting: " + minToDisplay(elapsedTime(new DateTime()));
+        String time_start = "Started " + minToDisplay(elapsedTime(new DateTime())) + " ago";
         timeFromStart.setText(time_start);
 
 
-        String time_last = "Time since last drink: " + minToDisplay(prevTime(new DateTime(), isUpdate));
+        String time_last = "Last drank " + minToDisplay(prevTime(new DateTime(), isUpdate)) + " ago";
         timeFromLast.setText(time_last);
 
     }//timeDisplay
@@ -324,24 +341,65 @@ public class DemoActivity extends AppCompatActivity {
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
         double now = new DateTime().getSecondOfDay() + new DateTime().getDayOfYear() * 86400;
+
         if(isUndo) {
-            datapoints.remove(datapoints.size()-1);
-            series.resetData(datapoints.toArray(new DataPoint[0]));
+            datapoints.remove(datapoints.size() - 1);
+            int cPosition = colorToPosition(currentSeries.getColor());
+            positions[cPosition].remove((positions[cPosition].size() - 1));
+
+            if(positions[cPosition].size() == 0) {
+                graph.removeSeries(currentSeries);
+                currentSeries = new PointsGraphSeries<>();
+            }
+            else {
+                currentSeries.resetData(colorData(datapoints, positions[cPosition]));
+            }
         }
         else {
-            DataPoint data = new DataPoint(now, BAC);
-            datapoints.add(data);
-            series.appendData(data, false, 100);
-        }
+            int currentColor = BAC_color();
+            if (currentColor == RED) {
+                currentSeries = redSeries;
+                positions[2].add(datapoints.size());
+            } else if (currentColor == ORANGE) {
+                currentSeries = orangeSeries;
+                positions[1].add(datapoints.size());
+            } else if (currentColor == GREEN) {
+                currentSeries = greenSeries;
+                positions[0].add(datapoints.size());
+            }
 
-        BAC_max = BAC > BAC_max ? BAC : BAC_max;
-        graph.getViewport().setMaxX(now + 10); // Change to be normalized
+            DataPoint[] data = new DataPoint[1];
+            data[0] = new DataPoint(now, BAC);
+            try {
+                currentSeries.appendData(data[0], false, 100);
+            }//try
+            catch (NullPointerException e) {
+                currentSeries = new PointsGraphSeries<>(data);
+
+                graph.addSeries(currentSeries);
+            }//catch
+            datapoints.add(data[0]);
+
+            setShape(currentSeries);
+            currentSeries.setColor(currentColor);
+        }
+        currentDisplay(graph, now);
+    }//graphDisplay
+
+    public void currentDisplay(GraphView graph, double now) {
+        DataPoint[] data = new DataPoint[1];
+        data[0] = new DataPoint(now,BAC);
+
+        current.resetData(data);
+
+        graph.getViewport().setMaxX(now + 10);
         graph.getViewport().setMaxY(BAC_max * 1.25);
 
-        series.setColor(BAC_color());
-        graph.getGridLabelRenderer().setVerticalLabelsColor(BAC_color());
+        int color = BAC_color();
 
-    }//graphDisplay
+        current.setColor(color);
+        graph.getGridLabelRenderer().setVerticalLabelsColor(color);
+    }
 
     public void graphSetup() {
         GraphView graph = (GraphView) findViewById(R.id.graph);
@@ -354,7 +412,9 @@ public class DemoActivity extends AppCompatActivity {
                 if (isValueX) {
 
                     int hour = ((((int) value) % 86400) / 3600) % 12;
-                    if (hour == 0) {    hour = 12;  }
+                    if (hour == 0) {
+                        hour = 12;
+                    }
 
                     int min = ((((int) value) % 86400) % 3600) / 60;
 
@@ -373,8 +433,8 @@ public class DemoActivity extends AppCompatActivity {
         label.setVerticalLabelsColor(BAC_color());
         view.setXAxisBoundsManual(true);
         view.setYAxisBoundsManual(true);
-        view.setMinX(start - 5);
-        view.setMaxX(start + 240);
+        view.setMinX(start - 15);
+        view.setMaxX(start + 120);
         view.setMinY(0d);
         view.setMaxY(0.05d);
         view.setScalable(true);
@@ -383,31 +443,72 @@ public class DemoActivity extends AppCompatActivity {
         DataPoint[] data = new DataPoint[1];
         data[0] = new DataPoint(start,BAC);
         datapoints.add(data[0]);
+        currentSeries = greenSeries;
         try {
-            series.resetData(data);
+            currentSeries.resetData(data);
+            current.resetData(data);
         }//try
         catch (NullPointerException e) {
-            series = new PointsGraphSeries<>(data);
+            currentSeries = new PointsGraphSeries<>(data);
+            current = new PointsGraphSeries<>(data);
 
-            graph.addSeries(series);
+            graph.addSeries(currentSeries);
+            graph.addSeries(current);
         }//catch
 
         graph.setVisibility(View.VISIBLE);
 
-        series.setCustomShape(new PointsGraphSeries.CustomShape() {
+        setShape(currentSeries);
+        positions[0].add(0);
+
+        current.setCustomShape(new PointsGraphSeries.CustomShape() {
             @Override
             public void draw(Canvas canvas, Paint paint, float x, float y, DataPointInterface dataPoint) {
                 paint.setStrokeWidth(10);
-                canvas.drawLine(x-20,y-20, x-10,y+20, paint);
-                canvas.drawLine(x-10,y+20, x+10,y+20, paint);
-                canvas.drawLine(x+10,y+20, x+20,y-20, paint);
-                canvas.drawLine(x+20,y-20, x-20,y-20, paint);
+                canvas.drawLine(x - 10, y, x + 10, y, paint);
+                canvas.drawLine(x, y - 10, x, y + 10, paint);
             }
         });
-        series.setColor(Color.rgb(0, 200, 0));
+
+        currentSeries.setColor(GREEN);
+        current.setColor(GREEN);
         label.reloadStyles();
 
     }//graphSetup
+
+    public int colorToPosition(int color) {
+        if(color == GREEN) {
+            return 0;
+        }
+        else if(color == ORANGE) {
+            return 1;
+        }
+        else {
+            return 2;
+        }
+    }
+
+    public DataPoint[] colorData(ArrayList data, ArrayList pos) {
+        DataPoint[] cData = new DataPoint[pos.size()];
+        for(int p = 0; p < pos.size(); p++) {
+            cData[p] = (DataPoint)data.get((int)pos.get(p));
+        }
+        System.out.println(cData.length);
+        return cData;
+    }
+
+    public void setShape(PointsGraphSeries s) {
+        s.setCustomShape(new PointsGraphSeries.CustomShape() {
+            @Override
+            public void draw(Canvas canvas, Paint paint, float x, float y, DataPointInterface dataPoint) {
+                paint.setStrokeWidth(10);
+                canvas.drawLine(x - 25, y - 30, x - 15, y + 30, paint);
+                canvas.drawLine(x - 15, y + 30, x + 15, y + 30, paint);
+                canvas.drawLine(x + 15, y + 30, x + 25, y - 30, paint);
+                canvas.drawLine(x + 25, y - 30, x - 25, y - 30, paint);
+            }
+        });
+    }
 
 
     // Color Methods
@@ -435,16 +536,16 @@ public class DemoActivity extends AppCompatActivity {
     {
         int change;
         if (BAC > 0.18) {
-            change = Color.rgb(220,0,0);
+            change = RED;
         }//red
         else if (BAC > 0.08) {
-            change = Color.rgb(240,110,0);
+            change = ORANGE;
         }//orange
         else if (BAC > 0) {
-            change = Color.rgb(0,200,0);
+            change = GREEN;
         }//green
         else {
-            change = Color.rgb(0,150,255);
+            change = BLUE;
         }//blue
 
         return change;
